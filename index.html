@@ -5,20 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#140c08">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="description" content="פיני מוצא לך בזול — הכניסה לקבוצת הדילים בטלגרם">
+  <meta name="description" content="פיני מוצא לך בזול — הכניסה לקבוצות בטלגרם ובוואטסאפ">
   <title>פיני מוצא לך בזול💵🦝</title>
   <link rel="icon" href="pini.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="pini.jpg">
   <style>
     :root {
       --bg: #140c08;
-      --bg-2: #2a160c;
       --gold: #ffd34d;
-      --gold-2: #f5b100;
       --ink: #fff7e8;
       --muted: #e8d2b0;
-      --btn: #229ed9;
-      --btn-ink: #fff;
+      --tg: #229ed9;
+      --wa: #25d366;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -35,49 +33,36 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: calc(88px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));
+      padding: calc(24px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));
+    }
+    body.tiktok {
+      justify-content: flex-start;
+      padding-top: calc(92px + env(safe-area-inset-top));
     }
 
     /* Physical top-right: TikTok's ⋯ is always there, even on RTL pages */
-    #tiktok-hint {
+    #tiktok-arrow {
       display: none;
       position: fixed;
-      top: calc(8px + env(safe-area-inset-top));
-      right: 14px;
+      top: calc(2px + env(safe-area-inset-top));
+      right: 10px;
       left: auto;
-      z-index: 20;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-      max-width: min(78vw, 280px);
+      z-index: 30;
       pointer-events: none;
-    }
-    #tiktok-hint.show { display: flex; }
-    #tiktok-hint .arrow {
       color: var(--gold);
-      font-size: 34px;
+      font-size: 72px;
       line-height: 1;
-      transform: translateX(6px) rotate(-15deg);
-      text-shadow: 0 2px 8px #000;
-      font-weight: 700;
-    }
-    #tiktok-hint p {
-      background: var(--gold);
-      color: #1a1008;
       font-weight: 800;
-      font-size: 14px;
-      line-height: 1.35;
-      padding: 8px 12px;
-      border-radius: 14px;
-      box-shadow: 0 6px 20px rgba(0,0,0,.45);
-      text-align: right;
+      text-shadow: 0 2px 10px #000, 0 0 18px rgba(255, 211, 77, .55);
+      animation: point 0.85s ease-in-out infinite;
+    }
+    body.tiktok #tiktok-arrow { display: block; }
+    @keyframes point {
+      0%, 100% { transform: translate(0, 0) rotate(-18deg); }
+      50% { transform: translate(10px, -12px) rotate(-18deg); }
     }
 
-    main {
-      width: 100%;
-      max-width: 420px;
-      text-align: center;
-    }
+    main { width: 100%; max-width: 420px; text-align: center; }
     .avatar {
       width: 132px;
       height: 132px;
@@ -85,24 +70,84 @@
       object-fit: cover;
       border: 3px solid var(--gold);
       box-shadow: 0 0 0 6px rgba(255, 211, 77, .18), 0 12px 32px rgba(0,0,0,.45);
-      margin: 0 auto 18px;
+      margin: 0 auto 16px;
       display: block;
       background: #8a1a12;
     }
+    body.tiktok .avatar { width: 88px; height: 88px; margin-bottom: 10px; }
     h1 {
       font-size: 1.55rem;
       line-height: 1.35;
       font-weight: 800;
-      letter-spacing: 0;
       margin-bottom: 8px;
     }
+    body.tiktok h1 { font-size: 1.28rem; margin-bottom: 14px; }
     .sub {
       color: var(--muted);
       font-size: 1.05rem;
-      margin-bottom: 28px;
+      margin-bottom: 26px;
       line-height: 1.45;
     }
-    #open {
+
+    #guide { display: none; text-align: right; }
+    body.tiktok #guide { display: block; }
+    body.tiktok #actions { display: none; }
+    #guide .lead {
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 18px;
+    }
+    #guide ol {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #guide li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 247, 232, .08);
+      border: 2px solid rgba(255, 211, 77, .35);
+      border-radius: 18px;
+      padding: 14px 14px 14px 16px;
+      text-align: right;
+    }
+    #guide .num {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: #1a1008;
+      font-size: 1.45rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #guide .txt {
+      font-size: 1.22rem;
+      font-weight: 800;
+      line-height: 1.35;
+      flex: 1;
+    }
+    #guide .dots {
+      display: inline-block;
+      background: #1a1008;
+      color: var(--gold);
+      border-radius: 8px;
+      padding: 0 8px 4px;
+      font-size: 1.5rem;
+      line-height: 1;
+      letter-spacing: -2px;
+      vertical-align: middle;
+    }
+
+    #actions { width: 100%; }
+    .btn {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -112,53 +157,70 @@
       padding: 16px 20px;
       border: 0;
       border-radius: 18px;
-      background: var(--btn);
-      color: var(--btn-ink);
+      color: #fff;
       font: inherit;
-      font-size: 1.28rem;
+      font-size: 1.22rem;
       font-weight: 800;
       text-decoration: none;
-      box-shadow: 0 10px 28px rgba(34, 158, 217, .38);
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
       user-select: none;
+      margin-bottom: 12px;
     }
-    #open:active { transform: scale(.98); filter: brightness(.95); }
-    #open svg { flex: 0 0 auto; }
+    .btn:active { transform: scale(.98); filter: brightness(.95); }
+    .btn-tg { background: var(--tg); box-shadow: 0 10px 28px rgba(34, 158, 217, .38); }
+    .btn-wa { background: var(--wa); box-shadow: 0 10px 28px rgba(37, 211, 102, .32); }
+    .btn svg { flex: 0 0 auto; }
     #status {
-      min-height: 3.2em;
-      margin-top: 16px;
+      min-height: 1.5em;
+      margin-top: 8px;
       color: var(--muted);
       font-size: .95rem;
       line-height: 1.45;
     }
-    .search-hint {
-      margin-top: 22px;
-      color: #c9b090;
-      font-size: .88rem;
-      line-height: 1.4;
-    }
-    .search-hint strong { color: var(--gold); font-weight: 800; }
   </style>
 </head>
 <body>
-  <div id="tiktok-hint" hidden>
-    <div class="arrow" aria-hidden="true">↗</div>
-    <p>לחצו על ⋯ למעלה ואז «פתח בדפדפן»</p>
-  </div>
+  <div id="tiktok-arrow" aria-hidden="true">↗</div>
 
   <main>
     <img class="avatar" src="pini.jpg" width="132" height="132" alt="פיני">
     <h1>פיני מוצא לך בזול💵🦝</h1>
-    <p class="sub">הקבוצה בטלגרם — דילים חמים במחיר רצפה</p>
-    <a id="open" href="https://t.me/pinitheraccoon" rel="noopener">
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M21.5 3.3 18.4 21c-.2 1.1-.8 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.2.3-.5.5-.9.5l.3-4.8 8.8-8c.4-.3 0-.5-.6-.2l-10.9 6.9-4.7-1.5c-1-.3-1-.9.2-1.4L20 2.6c.8-.3 1.5.2 1.5.7z"/>
-      </svg>
-      פתיחה בטלגרם
-    </a>
-    <p id="status"></p>
-    <p class="search-hint">אם הכפתור לא עובד, חפשו בטלגרם: <strong>pinitheraccoon</strong></p>
+
+    <section id="guide">
+      <p class="lead">כדי להיכנס לקבוצה<br>פתחו קודם בדפדפן:</p>
+      <ol>
+        <li>
+          <span class="num">1</span>
+          <span class="txt">לחצו על <span class="dots">⋯</span> למעלה בצד ימין</span>
+        </li>
+        <li>
+          <span class="num">2</span>
+          <span class="txt">לחצו «פתח בדפדפן»</span>
+        </li>
+        <li>
+          <span class="num">3</span>
+          <span class="txt">שם יופיעו הכפתורים ויפתחו את הקבוצות</span>
+        </li>
+      </ol>
+    </section>
+
+    <section id="actions">
+      <p class="sub">בחרו איפה להצטרף לדילים</p>
+      <a id="open-tg" class="btn btn-tg" href="https://t.me/pinitheraccoon" rel="noopener">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M21.5 3.3 18.4 21c-.2 1.1-.8 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.2.3-.5.5-.9.5l.3-4.8 8.8-8c.4-.3 0-.5-.6-.2l-10.9 6.9-4.7-1.5c-1-.3-1-.9.2-1.4L20 2.6c.8-.3 1.5.2 1.5.7z"/>
+        </svg>
+        פתיחה בטלגרם
+      </a>
+      <a id="open-wa" class="btn btn-wa" href="https://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM" rel="noopener">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12.04 2C6.5 2 2.03 6.45 2.03 12c0 1.76.46 3.48 1.34 5L2 22l5.16-1.34A10 10 0 0 0 12.04 22C17.57 22 22 17.54 22 12S17.57 2 12.04 2zm5.85 14.27c-.24.68-1.4 1.3-1.94 1.35-.5.04-1.12.07-1.81-.11-.42-.12-.95-.3-1.64-.6-2.89-1.25-4.77-4.16-4.92-4.35-.14-.2-1.18-1.57-1.18-3 0-1.42.73-2.12 1-2.4.24-.27.64-.39 1.02-.39h.73c.23 0 .55-.1.86.66.32.77 1.08 2.65 1.17 2.84.1.2.16.42.03.68-.13.27-.2.43-.4.66-.2.23-.41.51-.59.69-.18.18-.37.37-.16.72.2.34.9 1.48 1.93 2.4 1.33 1.18 2.45 1.55 2.8 1.72.35.18.55.15.75-.09.2-.23.87-1.01 1.1-1.36.23-.34.46-.28.77-.16.32.11 2.03.96 2.38 1.13.35.18.58.26.66.41.09.15.09.86-.16 1.54z"/>
+        </svg>
+        פתיחה בוואטסאפ
+      </a>
+      <p id="status"></p>
+    </section>
   </main>
 
   <script>
@@ -166,6 +228,7 @@
       var DOMAIN = 'pinitheraccoon';
       var TG_HTTPS = 'https://t.me/' + DOMAIN;
       var TG_SCHEME = 'tg://resolve?domain=' + DOMAIN;
+      var WA_HTTPS = 'https://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM';
 
       var ua = navigator.userAgent || '';
       var isAndroid = /Android/i.test(ua);
@@ -174,8 +237,10 @@
       var escaped = false;
       try { escaped = new URL(location.href).searchParams.get('escaped') === '1'; } catch (e) {}
 
+      var inTikTok = isTikTok && !escaped;
+      if (inTikTok) document.body.classList.add('tiktok');
+
       var left = false;
-      var timers = [];
       function onLeave() { left = true; }
       document.addEventListener('visibilitychange', function () {
         if (document.hidden) onLeave();
@@ -184,104 +249,50 @@
       window.addEventListener('blur', onLeave);
 
       function later(fn, ms) {
-        var id = setTimeout(function () {
-          if (!left) fn();
-        }, ms);
-        timers.push(id);
-        return id;
+        return setTimeout(function () { if (!left) fn(); }, ms);
       }
-      function go(url) {
-        window.location.href = url;
-      }
+      function go(url) { window.location.href = url; }
       function tgIntent(pkg, fallback) {
         var s = 'intent://resolve?domain=' + DOMAIN + '#Intent;scheme=tg;';
         if (pkg) s += 'package=' + pkg + ';';
         if (fallback) s += 'S.browser_fallback_url=' + encodeURIComponent(fallback) + ';';
         return s + 'end';
       }
-      function thisEscapedUrl() {
-        var u = new URL(location.href);
-        u.searchParams.set('escaped', '1');
-        u.hash = '';
-        return u.href;
-      }
-      function browserIntent(pageUrl, pkg) {
-        var u = new URL(pageUrl);
-        var path = u.host + u.pathname + u.search;
-        var s = 'intent://' + path + '#Intent;scheme=https;';
-        if (pkg) s += 'package=' + pkg + ';';
-        s += 'S.browser_fallback_url=' + encodeURIComponent(pageUrl) + ';end';
-        return s;
-      }
 
-      var openBtn = document.getElementById('open');
+      /* Inside TikTok: guide only. No auto intents (they trigger the error toast). */
+      if (inTikTok) return;
+
+      var openTg = document.getElementById('open-tg');
       var statusEl = document.getElementById('status');
-      var hint = document.getElementById('tiktok-hint');
-
       function setStatus(text) { statusEl.textContent = text || ''; }
-
-      if (isTikTok && !escaped) {
-        hint.hidden = false;
-        hint.classList.add('show');
-      }
 
       function openTelegram() {
         if (isAndroid) {
-          var fallback = (!isTikTok || escaped) ? TG_HTTPS : '';
-          go(tgIntent('org.telegram.messenger', fallback));
-          later(function () {
-            go(tgIntent('', fallback || undefined));
-          }, 700);
-          if (isTikTok && !escaped) {
-            later(function () {
-              go(browserIntent(thisEscapedUrl(), ''));
-            }, 1400);
-            later(function () {
-              go(browserIntent(thisEscapedUrl(), 'com.android.chrome'));
-            }, 2100);
-          } else {
-            later(function () { go(TG_HTTPS); }, 1400);
-          }
+          go(tgIntent('org.telegram.messenger', TG_HTTPS));
+          later(function () { go(tgIntent('', TG_HTTPS)); }, 700);
+          later(function () { go(TG_HTTPS); }, 1400);
         } else {
           go(TG_SCHEME);
           later(function () { go(TG_HTTPS); }, 1200);
         }
       }
 
-      openBtn.addEventListener('click', function (ev) {
+      if (isAndroid) openTg.setAttribute('href', tgIntent('org.telegram.messenger', TG_HTTPS));
+      else if (isIOS) openTg.setAttribute('href', TG_SCHEME);
+
+      openTg.addEventListener('click', function (ev) {
         ev.preventDefault();
         left = false;
         setStatus('פותח את טלגרם…');
         openTelegram();
       });
 
-      if (isAndroid) {
-        openBtn.setAttribute('href', tgIntent('org.telegram.messenger', TG_HTTPS));
-      } else if (isIOS) {
-        openBtn.setAttribute('href', TG_SCHEME);
-      }
-
-      /* Auto-try only on Android. TikTok iOS blocks JS scheme redirects. */
-      if (isAndroid) {
-        setStatus('מנסה לפתוח את טלגרם…');
+      if (isAndroid || isIOS) {
+        setStatus('פותח את טלגרם…');
+        later(openTelegram, 80);
         later(function () {
-          openTelegram();
-        }, 80);
-        later(function () {
-          setStatus(isTikTok && !escaped
-            ? 'אם לא נפתח, לחצו על הכפתור הגדול. עדיין בתוך טיקטוק? ⋯ ואז «פתח בדפדפן».'
-            : 'אם לא נפתח, לחצו על הכפתור הגדול.');
-        }, 2600);
-      } else if (isIOS && isTikTok && !escaped) {
-        setStatus('טיקטוק חוסם מעבר אוטומטי באייפון. לחצו על הכפתור, ואם לא נפתח — ⋯ למעלה ואז «פתח בדפדפן».');
-      } else if (isIOS) {
-        setStatus('לחצו על הכפתור כדי להיכנס לקבוצה.');
-        later(function () { openTelegram(); }, 80);
-        later(function () {
-          setStatus('אם לא נפתח, לחצו על הכפתור הגדול.');
-        }, 1800);
-      } else {
-        setStatus('לחצו על הכפתור כדי להיכנס לקבוצה.');
+          setStatus('אם לא נפתח, לחצו על הכפתור.');
+        }, isAndroid ? 1800 : 1600);
       }
     })();
   </script>
