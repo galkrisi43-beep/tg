@@ -2,11 +2,12 @@
   Pini landing. Same behavior on /, /v4/, and /v5/.
   TikTok bio currently points at /v4/.
 
-  Inside TikTok on Android: auto-try method A (packageless https intent
-  to this same page with ?from=tt). Primary button «פתחו בדפדפן» fires A;
-  smaller «או פתחו בכרום» fires B (Chrome + browser_fallback_url).
-  Inside TikTok on iPhone: x-safari-https button plus the ⋯ hint.
-  Real browser, or ?from=tt after a successful escape: Telegram + WhatsApp.
+  Finding: A and B intents work from a TikTok DM webview, but TikTok's
+  bio webview blocks all intents (Gal confirmed A–E on test.html fail
+  from the bio). Do not auto-redirect. The in-TikTok view leads with the
+  ⋯ → «פתח בדפדפן» guide and Telegram search/copy. A/B stay as small
+  plain <a href="intent://..."> anchors only, same format as test.html.
+  Real browser, or ?from=tt: Telegram + WhatsApp join buttons.
 -->
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -131,8 +132,64 @@
     #apps { display: none; width: 100%; }
     body.tiktok #escape { display: block; }
     body:not(.tiktok) #apps { display: block; }
-    #open-chrome { display: none; }
-    body.tiktok.android #open-chrome { display: flex; }
+
+    #guide {
+      text-align: right;
+      margin-bottom: 18px;
+    }
+    #guide .lead {
+      text-align: center;
+      font-size: 1.22rem;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 14px;
+    }
+    #guide ol {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #guide li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 247, 232, .08);
+      border: 2px solid rgba(255, 211, 77, .35);
+      border-radius: 18px;
+      padding: 14px 14px 14px 16px;
+      text-align: right;
+    }
+    #guide .num {
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: #1a1008;
+      font-size: 1.3rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #guide .txt {
+      font-size: 1.12rem;
+      font-weight: 800;
+      line-height: 1.35;
+      flex: 1;
+    }
+    #guide .dots {
+      display: inline-block;
+      background: #1a1008;
+      color: var(--gold);
+      border-radius: 8px;
+      padding: 0 8px 3px;
+      font-size: 1.4rem;
+      line-height: 1;
+      letter-spacing: -2px;
+      vertical-align: middle;
+    }
 
     .btn {
       display: flex;
@@ -155,15 +212,6 @@
       margin-bottom: 12px;
     }
     .btn:active { transform: scale(.98); filter: brightness(.95); }
-    .btn-chrome { background: var(--chrome); color: #1a1008; box-shadow: 0 10px 28px rgba(245, 177, 0, .38); }
-    .btn-chrome-sm {
-      background: rgba(245, 177, 0, .16);
-      border: 2px solid rgba(245, 177, 0, .7);
-      color: var(--gold);
-      box-shadow: none;
-      min-height: 48px;
-      font-size: 1.02rem;
-    }
     .btn-tg { background: var(--tg); box-shadow: 0 10px 28px rgba(34, 158, 217, .38); }
     .btn-wa { background: var(--wa); box-shadow: 0 10px 28px rgba(37, 211, 102, .32); }
     .btn-copy {
@@ -174,18 +222,30 @@
       min-height: 56px;
       font-size: 1.08rem;
     }
+    .btn-chrome-sm {
+      background: rgba(245, 177, 0, .14);
+      border: 2px solid rgba(245, 177, 0, .55);
+      color: var(--gold);
+      box-shadow: none;
+      min-height: 44px;
+      font-size: .98rem;
+      margin-bottom: 8px;
+    }
     .btn svg { flex: 0 0 auto; }
-    .hint {
-      color: var(--muted);
-      font-size: .95rem;
-      line-height: 1.45;
-      margin: 4px 0 14px;
+
+    #copy-main {
+      width: 100%;
+      margin: 4px 0 18px;
+      padding: 14px 14px 8px;
+      background: rgba(255, 247, 232, .08);
+      border: 2px solid rgba(255, 211, 77, .35);
+      border-radius: 18px;
     }
     .search-hint {
       color: var(--muted);
-      font-size: .95rem;
+      font-size: 1.02rem;
       line-height: 1.45;
-      margin-top: 8px;
+      margin-bottom: 10px;
     }
     .search-hint strong, .ltr {
       color: var(--ink);
@@ -195,12 +255,25 @@
     }
     #status {
       min-height: 1.4em;
-      margin-top: 4px;
+      margin-top: 2px;
+      margin-bottom: 4px;
       color: var(--muted);
       font-size: .95rem;
       line-height: 1.45;
     }
     #copy-row { width: 100%; margin-top: 6px; }
+    body.tiktok #copy-row { display: none; }
+
+    #try-intents {
+      width: 100%;
+      margin-top: 4px;
+    }
+    #try-intents .alt {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
@@ -216,10 +289,35 @@
     <h1>פיני מוצא לך בזול💵🦝</h1>
 
     <section id="escape">
-      <p class="sub">כדי להיכנס לקבוצה צריך דפדפן אמיתי, לא את טיקטוק:</p>
-      <a id="open-browser" class="btn btn-chrome" href="https://galkrisi43-beep.github.io/tg/v5/?from=tt">פתחו בדפדפן</a>
-      <a id="open-chrome" class="btn btn-chrome-sm" href="https://galkrisi43-beep.github.io/tg/v5/?from=tt">או פתחו בכרום</a>
-      <p class="hint">אם לא נפתח — זה בדיוק הכפתור למעלה: ⋯ ואז «פתח בדפדפן».</p>
+      <div id="guide">
+        <p class="lead">כדי להיכנס לקבוצה<br>פתחו קודם בדפדפן:</p>
+        <ol>
+          <li>
+            <span class="num">1</span>
+            <span class="txt">לחצו על <span class="dots">⋯</span> למעלה בצד ימין</span>
+          </li>
+          <li>
+            <span class="num">2</span>
+            <span class="txt">לחצו «פתח בדפדפן»</span>
+          </li>
+          <li>
+            <span class="num">3</span>
+            <span class="txt">שם יופיעו הכפתורים לקבוצות</span>
+          </li>
+        </ol>
+      </div>
+
+      <div id="copy-main">
+        <p class="search-hint">או חפשו בטלגרם: <strong>pinitheraccoon</strong></p>
+        <button type="button" id="copy-name" class="btn btn-copy">העתק שם</button>
+        <p id="status"></p>
+      </div>
+
+      <div id="try-intents">
+        <p class="alt">אם זה לא עובד, אפשר לנסות:</p>
+        <a id="open-browser" class="btn btn-chrome-sm" href="intent://galkrisi43-beep.github.io/tg/v5/?from=tt#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end">פתחו בדפדפן</a>
+        <a id="open-chrome" class="btn btn-chrome-sm" href="intent://galkrisi43-beep.github.io/tg/v5/?from=tt#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=https%3A%2F%2Fgalkrisi43-beep.github.io%2Ftg%2Fv5%2F%3Ffrom%3Dtt;end">או פתחו בכרום</a>
+      </div>
     </section>
 
     <section id="apps">
@@ -240,15 +338,13 @@
 
     <div id="copy-row">
       <p class="search-hint">או חפשו בטלגרם: <strong>pinitheraccoon</strong></p>
-      <button type="button" id="copy-name" class="btn btn-copy">העתק שם</button>
-      <p id="status"></p>
+      <button type="button" id="copy-name-browser" class="btn btn-copy">העתק שם</button>
+      <p id="status-browser"></p>
     </div>
   </main>
 
   <script>
     (function () {
-      var HOST_PATH = 'galkrisi43-beep.github.io/tg/v5/?from=tt';
-      var PAGE_HTTPS = 'https://' + HOST_PATH;
       var DOMAIN = 'pinitheraccoon';
       var TG_HTTPS = 'https://t.me/' + DOMAIN;
       var TG_SCHEME = 'tg://resolve?domain=' + DOMAIN;
@@ -261,18 +357,12 @@
       var fromTt = false;
       try { fromTt = new URL(location.href).searchParams.get('from') === 'tt'; } catch (e) {}
 
-      /* Still inside TikTok and not yet escaped → show the breakout UI.
-         Real browser, or ?from=tt after a successful escape → show join buttons. */
+      /* Still inside TikTok and not yet escaped → show the ⋯ guide.
+         Real browser, or ?from=tt after opening in a real browser → join buttons.
+         No auto-redirect: TikTok's bio webview blocks all intents. */
       var inTikTok = isTikTok && !fromTt;
       if (inTikTok) document.body.classList.add('tiktok');
-      if (isAndroid) document.body.classList.add('android');
 
-      function methodA() {
-        return 'intent://' + HOST_PATH + '#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end';
-      }
-      function methodB() {
-        return 'intent://' + HOST_PATH + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(PAGE_HTTPS) + ';end';
-      }
       function tgIntent(pkg, fallback) {
         var s = 'intent://resolve?domain=' + DOMAIN + '#Intent;scheme=tg;';
         if (pkg) s += 'package=' + pkg + ';';
@@ -283,52 +373,45 @@
         return 'intent://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM#Intent;scheme=https;package=com.whatsapp;S.browser_fallback_url=' + encodeURIComponent(WA_HTTPS) + ';end';
       }
 
-      var openBrowser = document.getElementById('open-browser');
-      var openChrome = document.getElementById('open-chrome');
       var openTg = document.getElementById('open-tg');
       var openWa = document.getElementById('open-wa');
-      var copyBtn = document.getElementById('copy-name');
-      var statusEl = document.getElementById('status');
-      function setStatus(text) { statusEl.textContent = text || ''; }
+      /* A/B are plain static intent anchors (same format as test.html). Do not
+         rewrite, click-handle, or auto-navigate them. */
 
-      if (isAndroid) {
-        openBrowser.setAttribute('href', methodA());
-        openChrome.setAttribute('href', methodB());
+      if (!inTikTok && isAndroid) {
         openTg.setAttribute('href', tgIntent('org.telegram.messenger', TG_HTTPS));
         openWa.setAttribute('href', waIntent());
-      } else if (isIOS) {
-        openBrowser.setAttribute('href', 'x-safari-https://' + HOST_PATH);
-        if (!inTikTok) openTg.setAttribute('href', TG_SCHEME);
+      } else if (!inTikTok && isIOS) {
+        openTg.setAttribute('href', TG_SCHEME);
       }
 
-      /* Android + TikTok: try method A on load. If the in-app browser
-         blocks a gesture-less intent, the buttons stay for a tap. */
-      if (inTikTok && isAndroid) {
-        setTimeout(function () { window.location.href = methodA(); }, 80);
+      function bindCopy(btn, statusEl) {
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+          var name = DOMAIN;
+          function ok() { if (statusEl) statusEl.textContent = 'הועתק: pinitheraccoon'; }
+          function fail() { if (statusEl) statusEl.textContent = 'ההעתקה נחסמה. סמנו ידנית: pinitheraccoon'; }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(name).then(ok).catch(fail);
+          } else {
+            try {
+              var ta = document.createElement('textarea');
+              ta.value = name;
+              ta.setAttribute('readonly', '');
+              ta.style.position = 'fixed';
+              ta.style.top = '0';
+              ta.style.opacity = '0';
+              document.body.appendChild(ta);
+              ta.select();
+              var worked = document.execCommand('copy');
+              document.body.removeChild(ta);
+              if (worked) ok(); else fail();
+            } catch (e) { fail(); }
+          }
+        });
       }
-
-      copyBtn.addEventListener('click', function () {
-        var name = DOMAIN;
-        function ok() { setStatus('הועתק: pinitheraccoon'); }
-        function fail() { setStatus('ההעתקה נחסמה. סמנו ידנית: pinitheraccoon'); }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(name).then(ok).catch(fail);
-        } else {
-          try {
-            var ta = document.createElement('textarea');
-            ta.value = name;
-            ta.setAttribute('readonly', '');
-            ta.style.position = 'fixed';
-            ta.style.top = '0';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.select();
-            var worked = document.execCommand('copy');
-            document.body.removeChild(ta);
-            if (worked) ok(); else fail();
-          } catch (e) { fail(); }
-        }
-      });
+      bindCopy(document.getElementById('copy-name'), document.getElementById('status'));
+      bindCopy(document.getElementById('copy-name-browser'), document.getElementById('status-browser'));
     })();
   </script>
 </body>
