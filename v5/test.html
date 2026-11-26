@@ -1,0 +1,235 @@
+<!--
+  v5 debug page: each button tries one known way to leave TikTok's in-app browser.
+  Nothing runs on load. Live root and /v4/ are untouched.
+-->
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#140c08">
+  <meta name="robots" content="noindex,nofollow">
+  <title>בדיקות יציאה מטיקטוק — פיני</title>
+  <link rel="icon" href="../pini.jpg" type="image/jpeg">
+  <style>
+    :root {
+      --bg: #140c08;
+      --gold: #ffd34d;
+      --ink: #fff7e8;
+      --muted: #e8d2b0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: radial-gradient(ellipse at 50% 0%, #3a1e0c 0%, var(--bg) 62%);
+      color: var(--ink);
+      font-family: "Segoe UI", "SF Pro Text", "Assistant", "Heebo", "Arial Hebrew", "Noto Sans Hebrew", Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      min-height: 100dvh;
+      padding: calc(20px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+    }
+    #tiktok-arrow {
+      display: none;
+      position: fixed;
+      top: calc(2px + env(safe-area-inset-top));
+      right: 10px;
+      left: auto;
+      z-index: 30;
+      pointer-events: none;
+      color: var(--gold);
+      font-size: 56px;
+      line-height: 1;
+      font-weight: 800;
+      text-shadow: 0 2px 10px #000, 0 0 18px rgba(255, 211, 77, .55);
+      animation: point 0.85s ease-in-out infinite;
+    }
+    body.tiktok #tiktok-arrow { display: block; }
+    @keyframes point {
+      0%, 100% { transform: translate(0, 0) rotate(-18deg); }
+      50% { transform: translate(10px, -12px) rotate(-18deg); }
+    }
+    body.tiktok { padding-top: calc(80px + env(safe-area-inset-top)); }
+    main { width: 100%; max-width: 440px; margin: 0 auto; text-align: center; }
+    .step {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: var(--gold);
+      color: #1a1008;
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 1.12rem;
+      font-weight: 900;
+    }
+    body.tiktok .step { display: flex; }
+    .dots {
+      display: inline-block;
+      background: #1a1008;
+      color: var(--gold);
+      border-radius: 8px;
+      padding: 0 8px 3px;
+      font-size: 1.4rem;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+    h1 { font-size: 1.28rem; font-weight: 800; margin: 8px 0 8px; }
+    .lead { color: var(--muted); font-size: 1rem; line-height: 1.45; margin-bottom: 16px; }
+    .test {
+      background: rgba(255, 247, 232, .08);
+      border: 1px solid rgba(255, 211, 77, .3);
+      border-radius: 16px;
+      padding: 12px 14px 14px;
+      margin-bottom: 12px;
+      text-align: right;
+    }
+    .test .lab {
+      display: inline-block;
+      background: var(--gold);
+      color: #1a1008;
+      font-weight: 900;
+      border-radius: 8px;
+      padding: 2px 10px;
+      margin-left: 8px;
+    }
+    .test h2 { display: inline; font-size: 1.05rem; font-weight: 800; }
+    .test p { color: var(--muted); font-size: .92rem; line-height: 1.4; margin: 8px 0 10px; }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 14px;
+      background: #f5b100;
+      color: #1a1008;
+      font: inherit;
+      font-size: 1.08rem;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(.98); filter: brightness(.95); }
+    .btn-copy {
+      background: rgba(255, 247, 232, .12);
+      border: 2px solid rgba(255, 211, 77, .45);
+      color: var(--ink);
+      margin-top: 8px;
+    }
+    .search-hint { color: var(--muted); font-size: .95rem; margin-top: 16px; }
+    .search-hint strong { color: var(--ink); direction: ltr; unicode-bidi: isolate; }
+    #status { min-height: 1.4em; margin-top: 8px; color: var(--muted); font-size: .95rem; }
+    .back { display: inline-block; margin-top: 16px; color: var(--gold); font-weight: 800; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="tiktok-arrow" aria-hidden="true">↗</div>
+  <main>
+    <div class="step"><span class="dots">⋯</span><span>← «פתח בדפדפן»</span></div>
+    <h1>בדיקות יציאה מדפדפן טיקטוק</h1>
+    <p class="lead">לחצו על כל כפתור פעם אחת וכתבו לי איזה אות עבד (נפתח כרום/דפדפן). כלום לא רץ לבד.</p>
+
+    <div class="test">
+      <span class="lab">A</span>
+      <h2>דפדפן ברירת מחדל</h2>
+      <p>Intent בלי לציין אפליקציה — אמור לפתוח את דף הקבוצה בדפדפן הרגיל של הטלפון (כרום, סמסונג או אחר).</p>
+      <a id="btn-a" class="btn" href="#">נסה A</a>
+    </div>
+
+    <div class="test">
+      <span class="lab">B</span>
+      <h2>כרום + גיבוי</h2>
+      <p>Intent ישירות לכרום, עם כתובת גיבוי לאותו דף אם כרום לא מותקן. זה גם הכפתור «פתחו בכרום» בדף הראשי, בתוספת גיבוי.</p>
+      <a id="btn-b" class="btn" href="#">נסה B</a>
+    </div>
+
+    <div class="test">
+      <span class="lab">C</span>
+      <h2>קישור פנימי של כרום</h2>
+      <p>הסכימה googlechrome:// — מבקשת מכרום עצמו לפתוח את הדף.</p>
+      <a id="btn-c" class="btn" href="#">נסה C</a>
+    </div>
+
+    <div class="test">
+      <span class="lab">D</span>
+      <h2>ספארי (אייפון)</h2>
+      <p>הסכימה x-safari-https:// — ניסיון לפתוח בספארי. בטיקטוק על אייפון זה לרוב נחסם, אבל שווה לבדוק.</p>
+      <a id="btn-d" class="btn" href="#">נסה D</a>
+    </div>
+
+    <div class="test">
+      <span class="lab">E</span>
+      <h2>הורדת קובץ</h2>
+      <p>מנסה להוריד קובץ קטן עם הקישור. אם טיקטוק פותח תפריט «פתח באמצעות», אפשר לבחור כרום.</p>
+      <a id="btn-e" class="btn" href="link.txt" download="pini-telegram.txt">נסה E</a>
+    </div>
+
+    <p class="search-hint">או חפשו בטלגרם: <strong>pinitheraccoon</strong></p>
+    <button type="button" id="copy-name" class="btn btn-copy">העתק שם</button>
+    <p id="status"></p>
+    <a class="back" href="./?from=tt">חזרה לדף הכניסה</a>
+  </main>
+  <script>
+    (function () {
+      var HOST_PATH = 'galkrisi43-beep.github.io/tg/v5/?from=tt';
+      var PAGE_HTTPS = 'https://' + HOST_PATH;
+      var ua = navigator.userAgent || '';
+      var isTikTok = /BytedanceWebview|musical_ly|TikTok|AppName\/ultralite/i.test(ua);
+      if (isTikTok) document.body.classList.add('tiktok');
+
+      /* A: packageless intent — default browser (recommended in 2026 guides;
+         TikTok itself is "not dependable", which is why we test). */
+      document.getElementById('btn-a').setAttribute(
+        'href',
+        'intent://' + HOST_PATH + '#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end'
+      );
+
+      /* B: Chrome package + official fallback extra */
+      document.getElementById('btn-b').setAttribute(
+        'href',
+        'intent://' + HOST_PATH + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(PAGE_HTTPS) + ';end'
+      );
+
+      /* C: Chrome's own URL scheme */
+      document.getElementById('btn-c').setAttribute(
+        'href',
+        'googlechrome://navigate?url=' + encodeURIComponent(PAGE_HTTPS)
+      );
+
+      /* D: iOS Safari scheme */
+      document.getElementById('btn-d').setAttribute(
+        'href',
+        'x-safari-https://' + HOST_PATH
+      );
+
+      /* E is a real file download; href already set. */
+
+      var statusEl = document.getElementById('status');
+      document.getElementById('copy-name').addEventListener('click', function () {
+        var name = 'pinitheraccoon';
+        function ok() { statusEl.textContent = 'הועתק: pinitheraccoon'; }
+        function fail() { statusEl.textContent = 'ההעתקה נחסמה. סמנו ידנית: pinitheraccoon'; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(name).then(ok).catch(fail);
+        } else {
+          try {
+            var ta = document.createElement('textarea');
+            ta.value = name; ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            var worked = document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (worked) ok(); else fail();
+          } catch (e) { fail(); }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
