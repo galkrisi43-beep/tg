@@ -1,9 +1,12 @@
 <!--
-  v5 test page at /v5/. Do not copy over the live root or /v4/ (the bio uses /v4/ now).
+  Pini landing. Same behavior on /, /v4/, and /v5/.
+  TikTok bio currently points at /v4/.
 
-  After Gal's Android test, TikTok's in-app browser blocks tg://, intent:// to
-  Telegram, and WhatsApp app opens ("Action can't be completed"). v5 tries to
-  get the visitor into a real browser first, then shows the join buttons.
+  Inside TikTok on Android: auto-try method A (packageless https intent
+  to this same page with ?from=tt). Primary button «פתחו בדפדפן» fires A;
+  smaller «או פתחו בכרום» fires B (Chrome + browser_fallback_url).
+  Inside TikTok on iPhone: x-safari-https button plus the ⋯ hint.
+  Real browser, or ?from=tt after a successful escape: Telegram + WhatsApp.
 -->
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -71,7 +74,6 @@
 
     main { width: 100%; max-width: 420px; text-align: center; }
 
-    /* In TikTok: one clear step, above everything else */
     #escape-step {
       display: none;
       align-items: center;
@@ -129,6 +131,8 @@
     #apps { display: none; width: 100%; }
     body.tiktok #escape { display: block; }
     body:not(.tiktok) #apps { display: block; }
+    #open-chrome { display: none; }
+    body.tiktok.android #open-chrome { display: flex; }
 
     .btn {
       display: flex;
@@ -152,6 +156,14 @@
     }
     .btn:active { transform: scale(.98); filter: brightness(.95); }
     .btn-chrome { background: var(--chrome); color: #1a1008; box-shadow: 0 10px 28px rgba(245, 177, 0, .38); }
+    .btn-chrome-sm {
+      background: rgba(245, 177, 0, .16);
+      border: 2px solid rgba(245, 177, 0, .7);
+      color: var(--gold);
+      box-shadow: none;
+      min-height: 48px;
+      font-size: 1.02rem;
+    }
     .btn-tg { background: var(--tg); box-shadow: 0 10px 28px rgba(34, 158, 217, .38); }
     .btn-wa { background: var(--wa); box-shadow: 0 10px 28px rgba(37, 211, 102, .32); }
     .btn-copy {
@@ -205,7 +217,8 @@
 
     <section id="escape">
       <p class="sub">כדי להיכנס לקבוצה צריך דפדפן אמיתי, לא את טיקטוק:</p>
-      <a id="open-chrome" class="btn btn-chrome" href="https://galkrisi43-beep.github.io/tg/v5/?from=tt">פתחו בכרום</a>
+      <a id="open-browser" class="btn btn-chrome" href="https://galkrisi43-beep.github.io/tg/v5/?from=tt">פתחו בדפדפן</a>
+      <a id="open-chrome" class="btn btn-chrome-sm" href="https://galkrisi43-beep.github.io/tg/v5/?from=tt">או פתחו בכרום</a>
       <p class="hint">אם לא נפתח — זה בדיוק הכפתור למעלה: ⋯ ואז «פתח בדפדפן».</p>
     </section>
 
@@ -244,7 +257,7 @@
       var ua = navigator.userAgent || '';
       var isAndroid = /Android/i.test(ua);
       var isIOS = /iPhone|iPad|iPod/i.test(ua);
-      var isTikTok = /BytedanceWebview|musical_ly|TikTok|AppName\/ultralite/i.test(ua);
+      var isTikTok = /BytedanceWebview|musical_ly|TikTok|AppName\/ultralite|AppName\/trill|\btrill\b|trill_/i.test(ua);
       var fromTt = false;
       try { fromTt = new URL(location.href).searchParams.get('from') === 'tt'; } catch (e) {}
 
@@ -252,9 +265,13 @@
          Real browser, or ?from=tt after a successful escape → show join buttons. */
       var inTikTok = isTikTok && !fromTt;
       if (inTikTok) document.body.classList.add('tiktok');
+      if (isAndroid) document.body.classList.add('android');
 
-      function chromeIntent() {
-        return 'intent://' + HOST_PATH + '#Intent;scheme=https;package=com.android.chrome;end';
+      function methodA() {
+        return 'intent://' + HOST_PATH + '#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end';
+      }
+      function methodB() {
+        return 'intent://' + HOST_PATH + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(PAGE_HTTPS) + ';end';
       }
       function tgIntent(pkg, fallback) {
         var s = 'intent://resolve?domain=' + DOMAIN + '#Intent;scheme=tg;';
@@ -266,6 +283,7 @@
         return 'intent://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM#Intent;scheme=https;package=com.whatsapp;S.browser_fallback_url=' + encodeURIComponent(WA_HTTPS) + ';end';
       }
 
+      var openBrowser = document.getElementById('open-browser');
       var openChrome = document.getElementById('open-chrome');
       var openTg = document.getElementById('open-tg');
       var openWa = document.getElementById('open-wa');
@@ -273,14 +291,20 @@
       var statusEl = document.getElementById('status');
       function setStatus(text) { statusEl.textContent = text || ''; }
 
-      /* Never auto-navigate on load. Only set hrefs; navigation happens on a tap. */
       if (isAndroid) {
-        openChrome.setAttribute('href', chromeIntent());
+        openBrowser.setAttribute('href', methodA());
+        openChrome.setAttribute('href', methodB());
         openTg.setAttribute('href', tgIntent('org.telegram.messenger', TG_HTTPS));
         openWa.setAttribute('href', waIntent());
       } else if (isIOS) {
-        openChrome.setAttribute('href', 'x-safari-https://' + HOST_PATH);
+        openBrowser.setAttribute('href', 'x-safari-https://' + HOST_PATH);
         if (!inTikTok) openTg.setAttribute('href', TG_SCHEME);
+      }
+
+      /* Android + TikTok: try method A on load. If the in-app browser
+         blocks a gesture-less intent, the buttons stay for a tap. */
+      if (inTikTok && isAndroid) {
+        setTimeout(function () { window.location.href = methodA(); }, 80);
       }
 
       copyBtn.addEventListener('click', function () {

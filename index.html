@@ -1,3 +1,13 @@
+<!--
+  Pini landing. Same behavior on /, /v4/, and /v5/.
+  TikTok bio currently points at /v4/.
+
+  Inside TikTok on Android: auto-try method A (packageless https intent
+  to this same page with ?from=tt). Primary button «פתחו בדפדפן» fires A;
+  smaller «או פתחו בכרום» fires B (Chrome + browser_fallback_url).
+  Inside TikTok on iPhone: x-safari-https button plus the ⋯ hint.
+  Real browser, or ?from=tt after a successful escape: Telegram + WhatsApp.
+-->
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -17,6 +27,7 @@
       --muted: #e8d2b0;
       --tg: #229ed9;
       --wa: #25d366;
+      --chrome: #f5b100;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -37,10 +48,9 @@
     }
     body.tiktok {
       justify-content: flex-start;
-      padding-top: calc(92px + env(safe-area-inset-top));
+      padding-top: calc(88px + env(safe-area-inset-top));
     }
 
-    /* Physical top-right: TikTok's ⋯ is always there, even on RTL pages */
     #tiktok-arrow {
       display: none;
       position: fixed;
@@ -50,7 +60,7 @@
       z-index: 30;
       pointer-events: none;
       color: var(--gold);
-      font-size: 72px;
+      font-size: 64px;
       line-height: 1;
       font-weight: 800;
       text-shadow: 0 2px 10px #000, 0 0 18px rgba(255, 211, 77, .55);
@@ -63,6 +73,34 @@
     }
 
     main { width: 100%; max-width: 420px; text-align: center; }
+
+    #escape-step {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: var(--gold);
+      color: #1a1008;
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      line-height: 1.35;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    body.tiktok #escape-step { display: flex; }
+    #escape-step .dots {
+      display: inline-block;
+      background: #1a1008;
+      color: var(--gold);
+      border-radius: 8px;
+      padding: 0 8px 3px;
+      font-size: 1.55rem;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
     .avatar {
       width: 132px;
       height: 132px;
@@ -81,72 +119,21 @@
       font-weight: 800;
       margin-bottom: 8px;
     }
-    body.tiktok h1 { font-size: 1.28rem; margin-bottom: 14px; }
+    body.tiktok h1 { font-size: 1.28rem; margin-bottom: 10px; }
     .sub {
       color: var(--muted);
       font-size: 1.05rem;
-      margin-bottom: 26px;
+      margin-bottom: 18px;
       line-height: 1.45;
     }
 
-    #guide { display: none; text-align: right; }
-    body.tiktok #guide { display: block; }
-    body.tiktok #actions { display: none; }
-    #guide .lead {
-      text-align: center;
-      font-size: 1.35rem;
-      font-weight: 800;
-      line-height: 1.35;
-      margin-bottom: 18px;
-    }
-    #guide ol {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    #guide li {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: rgba(255, 247, 232, .08);
-      border: 2px solid rgba(255, 211, 77, .35);
-      border-radius: 18px;
-      padding: 14px 14px 14px 16px;
-      text-align: right;
-    }
-    #guide .num {
-      flex: 0 0 44px;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--gold);
-      color: #1a1008;
-      font-size: 1.45rem;
-      font-weight: 900;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #guide .txt {
-      font-size: 1.22rem;
-      font-weight: 800;
-      line-height: 1.35;
-      flex: 1;
-    }
-    #guide .dots {
-      display: inline-block;
-      background: #1a1008;
-      color: var(--gold);
-      border-radius: 8px;
-      padding: 0 8px 4px;
-      font-size: 1.5rem;
-      line-height: 1;
-      letter-spacing: -2px;
-      vertical-align: middle;
-    }
+    #escape { display: none; width: 100%; }
+    #apps { display: none; width: 100%; }
+    body.tiktok #escape { display: block; }
+    body:not(.tiktok) #apps { display: block; }
+    #open-chrome { display: none; }
+    body.tiktok.android #open-chrome { display: flex; }
 
-    #actions { width: 100%; }
     .btn {
       display: flex;
       align-items: center;
@@ -168,44 +155,74 @@
       margin-bottom: 12px;
     }
     .btn:active { transform: scale(.98); filter: brightness(.95); }
+    .btn-chrome { background: var(--chrome); color: #1a1008; box-shadow: 0 10px 28px rgba(245, 177, 0, .38); }
+    .btn-chrome-sm {
+      background: rgba(245, 177, 0, .16);
+      border: 2px solid rgba(245, 177, 0, .7);
+      color: var(--gold);
+      box-shadow: none;
+      min-height: 48px;
+      font-size: 1.02rem;
+    }
     .btn-tg { background: var(--tg); box-shadow: 0 10px 28px rgba(34, 158, 217, .38); }
     .btn-wa { background: var(--wa); box-shadow: 0 10px 28px rgba(37, 211, 102, .32); }
+    .btn-copy {
+      background: rgba(255, 247, 232, .12);
+      border: 2px solid rgba(255, 211, 77, .45);
+      color: var(--ink);
+      box-shadow: none;
+      min-height: 56px;
+      font-size: 1.08rem;
+    }
     .btn svg { flex: 0 0 auto; }
-    #status {
-      min-height: 1.5em;
+    .hint {
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.45;
+      margin: 4px 0 14px;
+    }
+    .search-hint {
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.45;
       margin-top: 8px;
+    }
+    .search-hint strong, .ltr {
+      color: var(--ink);
+      font-weight: 800;
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+    #status {
+      min-height: 1.4em;
+      margin-top: 4px;
       color: var(--muted);
       font-size: .95rem;
       line-height: 1.45;
     }
+    #copy-row { width: 100%; margin-top: 6px; }
   </style>
 </head>
 <body>
   <div id="tiktok-arrow" aria-hidden="true">↗</div>
 
   <main>
+    <div id="escape-step">
+      <span class="dots">⋯</span>
+      <span>← «פתח בדפדפן»</span>
+    </div>
+
     <img class="avatar" src="pini.jpg" width="132" height="132" alt="פיני">
     <h1>פיני מוצא לך בזול💵🦝</h1>
 
-    <section id="guide">
-      <p class="lead">כדי להיכנס לקבוצה<br>פתחו קודם בדפדפן:</p>
-      <ol>
-        <li>
-          <span class="num">1</span>
-          <span class="txt">לחצו על <span class="dots">⋯</span> למעלה בצד ימין</span>
-        </li>
-        <li>
-          <span class="num">2</span>
-          <span class="txt">לחצו «פתח בדפדפן»</span>
-        </li>
-        <li>
-          <span class="num">3</span>
-          <span class="txt">שם יופיעו הכפתורים ויפתחו את הקבוצות</span>
-        </li>
-      </ol>
+    <section id="escape">
+      <p class="sub">כדי להיכנס לקבוצה צריך דפדפן אמיתי, לא את טיקטוק:</p>
+      <a id="open-browser" class="btn btn-chrome" href="https://galkrisi43-beep.github.io/tg/?from=tt">פתחו בדפדפן</a>
+      <a id="open-chrome" class="btn btn-chrome-sm" href="https://galkrisi43-beep.github.io/tg/?from=tt">או פתחו בכרום</a>
+      <p class="hint">אם לא נפתח — זה בדיוק הכפתור למעלה: ⋯ ואז «פתח בדפדפן».</p>
     </section>
 
-    <section id="actions">
+    <section id="apps">
       <p class="sub">בחרו איפה לקבל דילים:</p>
       <a id="open-tg" class="btn btn-tg" href="https://t.me/pinitheraccoon" rel="noopener">
         <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
@@ -219,12 +236,19 @@
         </svg>
         פתיחה בוואטסאפ
       </a>
-      <p id="status"></p>
     </section>
+
+    <div id="copy-row">
+      <p class="search-hint">או חפשו בטלגרם: <strong>pinitheraccoon</strong></p>
+      <button type="button" id="copy-name" class="btn btn-copy">העתק שם</button>
+      <p id="status"></p>
+    </div>
   </main>
 
   <script>
     (function () {
+      var HOST_PATH = 'galkrisi43-beep.github.io/tg/?from=tt';
+      var PAGE_HTTPS = 'https://' + HOST_PATH;
       var DOMAIN = 'pinitheraccoon';
       var TG_HTTPS = 'https://t.me/' + DOMAIN;
       var TG_SCHEME = 'tg://resolve?domain=' + DOMAIN;
@@ -233,60 +257,78 @@
       var ua = navigator.userAgent || '';
       var isAndroid = /Android/i.test(ua);
       var isIOS = /iPhone|iPad|iPod/i.test(ua);
-      var isTikTok = /BytedanceWebview|musical_ly|TikTok|AppName\/ultralite/i.test(ua);
-      var escaped = false;
-      try { escaped = new URL(location.href).searchParams.get('escaped') === '1'; } catch (e) {}
+      var isTikTok = /BytedanceWebview|musical_ly|TikTok|AppName\/ultralite|AppName\/trill|\btrill\b|trill_/i.test(ua);
+      var fromTt = false;
+      try { fromTt = new URL(location.href).searchParams.get('from') === 'tt'; } catch (e) {}
 
-      var inTikTok = isTikTok && !escaped;
+      /* Still inside TikTok and not yet escaped → show the breakout UI.
+         Real browser, or ?from=tt after a successful escape → show join buttons. */
+      var inTikTok = isTikTok && !fromTt;
       if (inTikTok) document.body.classList.add('tiktok');
+      if (isAndroid) document.body.classList.add('android');
 
-      var left = false;
-      function onLeave() { left = true; }
-      document.addEventListener('visibilitychange', function () {
-        if (document.hidden) onLeave();
-      });
-      window.addEventListener('pagehide', onLeave);
-      window.addEventListener('blur', onLeave);
-
-      function later(fn, ms) {
-        return setTimeout(function () { if (!left) fn(); }, ms);
+      function methodA() {
+        return 'intent://' + HOST_PATH + '#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end';
       }
-      function go(url) { window.location.href = url; }
+      function methodB() {
+        return 'intent://' + HOST_PATH + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(PAGE_HTTPS) + ';end';
+      }
       function tgIntent(pkg, fallback) {
         var s = 'intent://resolve?domain=' + DOMAIN + '#Intent;scheme=tg;';
         if (pkg) s += 'package=' + pkg + ';';
         if (fallback) s += 'S.browser_fallback_url=' + encodeURIComponent(fallback) + ';';
         return s + 'end';
       }
+      function waIntent() {
+        return 'intent://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM#Intent;scheme=https;package=com.whatsapp;S.browser_fallback_url=' + encodeURIComponent(WA_HTTPS) + ';end';
+      }
 
-      /* Inside TikTok: guide only. No auto intents (they trigger the error toast). */
-      if (inTikTok) return;
-
+      var openBrowser = document.getElementById('open-browser');
+      var openChrome = document.getElementById('open-chrome');
       var openTg = document.getElementById('open-tg');
+      var openWa = document.getElementById('open-wa');
+      var copyBtn = document.getElementById('copy-name');
       var statusEl = document.getElementById('status');
       function setStatus(text) { statusEl.textContent = text || ''; }
 
-      function openTelegram() {
-        if (isAndroid) {
-          go(tgIntent('org.telegram.messenger', TG_HTTPS));
-          later(function () { go(tgIntent('', TG_HTTPS)); }, 700);
-          later(function () { go(TG_HTTPS); }, 1400);
-        } else {
-          go(TG_SCHEME);
-          later(function () { go(TG_HTTPS); }, 1200);
-        }
+      if (isAndroid) {
+        openBrowser.setAttribute('href', methodA());
+        openChrome.setAttribute('href', methodB());
+        openTg.setAttribute('href', tgIntent('org.telegram.messenger', TG_HTTPS));
+        openWa.setAttribute('href', waIntent());
+      } else if (isIOS) {
+        openBrowser.setAttribute('href', 'x-safari-https://' + HOST_PATH);
+        if (!inTikTok) openTg.setAttribute('href', TG_SCHEME);
       }
 
-      if (isAndroid) openTg.setAttribute('href', tgIntent('org.telegram.messenger', TG_HTTPS));
-      else if (isIOS) openTg.setAttribute('href', TG_SCHEME);
+      /* Android + TikTok: try method A on load. If the in-app browser
+         blocks a gesture-less intent, the buttons stay for a tap. */
+      if (inTikTok && isAndroid) {
+        setTimeout(function () { window.location.href = methodA(); }, 80);
+      }
 
-      openTg.addEventListener('click', function (ev) {
-        ev.preventDefault();
-        left = false;
-        setStatus('פותח את טלגרם…');
-        openTelegram();
+      copyBtn.addEventListener('click', function () {
+        var name = DOMAIN;
+        function ok() { setStatus('הועתק: pinitheraccoon'); }
+        function fail() { setStatus('ההעתקה נחסמה. סמנו ידנית: pinitheraccoon'); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(name).then(ok).catch(fail);
+        } else {
+          try {
+            var ta = document.createElement('textarea');
+            ta.value = name;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.top = '0';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            var worked = document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (worked) ok(); else fail();
+          } catch (e) { fail(); }
+        }
       });
-
     })();
   </script>
 </body>
