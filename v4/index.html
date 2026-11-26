@@ -192,7 +192,19 @@
       var fromTt = false;
       try { fromTt = new URL(location.href).searchParams.get('from') === 'tt'; } catch (e) {}
       var inTikTok = isTikTok && !fromTt;
-      if (inTikTok) { document.body.classList.add('tiktok'); return; }
+      /* Silent funnel counter (abacus.jasoncameron.dev, free, no account, no cookies).
+         Keys: tt_view, browser_view, tg_click, wa_click. ?ctest=1 counts into test_* keys. */
+      var CT_PREFIX = /[?&]ctest=1/.test(location.search) ? 'test_' : '';
+      function ping(key) {
+        var u = 'https://abacus.jasoncameron.dev/hit/pinideals-tg/' + CT_PREFIX + key + '?t=' + Date.now();
+        try {
+          if (window.fetch) { fetch(u, { keepalive: true, mode: 'no-cors', cache: 'no-store', credentials: 'omit' }).catch(function () {}); return true; }
+        } catch (e) {}
+        try { (new Image()).src = u; } catch (e) {}
+        return false;
+      }
+      if (inTikTok) { document.body.classList.add('tiktok'); ping('tt_view'); return; }
+      ping('browser_view');
       /* Real browser: open the apps directly where possible. */
       var openTg = document.getElementById('open-tg');
       var openWa = document.getElementById('open-wa');
@@ -202,6 +214,17 @@
       } else if (isIOS) {
         openTg.setAttribute('href', TG_SCHEME);
       }
+      function track(el, key) {
+        el.addEventListener('click', function (ev) {
+          if (ping(key)) return; /* fetch keepalive survives navigation */
+          /* No fetch: give the image ping a moment before navigating. */
+          var href = el.getAttribute('href');
+          ev.preventDefault();
+          setTimeout(function () { location.href = href; }, 250);
+        });
+      }
+      track(openTg, 'tg_click');
+      track(openWa, 'wa_click');
     })();
   </script>
 </body>
