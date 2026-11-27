@@ -109,7 +109,7 @@
     // Resolve s.click first so the app opens on a URL that already has affiliate params.
     const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
     const timer = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) {} }, 2500);
-    const opts = { headers: trackHeaders() };
+    const opts = { headers: trackHeaders(), credentials: "include" };
     if (ctl) opts.signal = ctl.signal;
     fetch(API_BASE + "/resolve?url=" + encodeURIComponent(url), opts)
       .then(function (r) { return r.json(); })
@@ -195,11 +195,11 @@
     try {
       fetch(API_BASE + "/event", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        headers: trackHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ events: [ev] }),
         keepalive: true,
         mode: "cors",
-        credentials: "omit",
+        credentials: "include",
       }).catch(function () {});
     } catch (e) {}
   }
@@ -490,6 +490,7 @@
     fetch(API_BASE + path, {
       signal: ctl.signal,
       cache: "no-store",
+      credentials: "include",
       headers: trackHeaders(),
     })
       .then(function (r) {
@@ -547,6 +548,7 @@
     const have = (state.aliProducts || []).map(function (p) { return p.id; }).filter(Boolean);
     fetch(API_BASE + "/similar?id=" + encodeURIComponent(id) + (have.length ? "&exclude=" + encodeURIComponent(have.join(",")) : ""), {
       cache: "no-store",
+      credentials: "include",
       headers: trackHeaders(),
     })
       .then(function (r) { return r.json(); })
@@ -590,6 +592,7 @@
       return fetch(API_BASE + "/photo", {
         method: "POST",
         cache: "no-store",
+        credentials: "include",
         headers: trackHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ image: dataUrl, mime: "image/jpeg" }),
       }).then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data || {} }; }); });
