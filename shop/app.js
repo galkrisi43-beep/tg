@@ -63,7 +63,7 @@
   function imgTag(src, alt, cls) {
     const url = thumbUrl(src);
     return '<img class="' + (cls || "") + '" src="' + esc(url) + '" alt="' + esc(alt || "") +
-      '" referrerpolicy="no-referrer" decoding="async" loading="lazy" onerror="this.onerror=null;this.src=\'' + PLACEHOLDER + '\';">';
+      '" referrerpolicy="no-referrer" decoding="async" loading="eager" onerror="this.onerror=null;this.src=\'' + PLACEHOLDER + '\';">';
   }
   function suggestions() {
     return '<div class="suggest"><div class="suggest-label">נסו למשל</div>' +
