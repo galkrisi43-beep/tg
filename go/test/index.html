@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F7EFE4">
+  <meta name="robots" content="noindex, nofollow">
+  <title>בדיקות יציאה מטיקטוק</title>
+  <style>
+    @font-face {
+      font-family: Assistant;
+      src: url("../../shop/Assistant.ttf") format("truetype");
+      font-weight: 200 800;
+      font-display: swap;
+    }
+    :root {
+      --cream: #F7EFE4;
+      --paper: #FFF8F1;
+      --ink: #2A2118;
+      --muted: #8A7A6C;
+      --line: #E8D8C8;
+      --terra: #C45C26;
+      --terra-deep: #A24618;
+      --peach: #F3D2B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: linear-gradient(180deg, #FFF8F1 0%, #F7EFE4 80%);
+      color: var(--ink);
+      font-family: Assistant, "Segoe UI", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100dvh;
+    }
+    .wrap { max-width: 430px; margin: 0 auto; padding: 20px 16px 48px; }
+    .top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .top img {
+      width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--peach);
+    }
+    h1 { font-size: 22px; font-weight: 800; line-height: 1.2; }
+    .lead { font-size: 14px; font-weight: 500; color: var(--muted); line-height: 1.45; margin: 0 0 18px; }
+    .phone {
+      display: inline-block; background: var(--peach); color: var(--terra-deep);
+      font-size: 12px; font-weight: 800; border-radius: 999px; padding: 4px 10px; margin-bottom: 14px;
+    }
+    .sec { margin: 8px 0 22px; }
+    .sec h2 {
+      font-size: 16px; font-weight: 800; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .badge {
+      font-size: 11px; font-weight: 800; background: #fff; border: 1px solid var(--line);
+      color: var(--muted); border-radius: 999px; padding: 3px 8px;
+    }
+    .badge.here { background: var(--terra); color: #fff; border-color: var(--terra); }
+    .dim { opacity: .55; }
+    .card {
+      background: #fff; border: 1.5px solid var(--line); border-radius: 16px;
+      padding: 12px; margin-bottom: 10px;
+    }
+    .card p { font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.4; margin: 0 0 10px; }
+    a.go, button.go {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 52px; padding: 12px 14px; border: 0; border-radius: 14px;
+      background: var(--terra); color: #fff; font: inherit; font-weight: 800; font-size: 16px;
+      text-decoration: none; cursor: pointer; box-shadow: 0 6px 16px rgba(196,92,38,.22);
+      -webkit-tap-highlight-color: transparent;
+    }
+    a.go:active, button.go:active { background: var(--terra-deep); }
+    .guide {
+      display: none; margin-top: 10px; background: #FFF8F1; border-radius: 14px;
+      padding: 14px 14px 16px; text-align: center; position: relative;
+    }
+    .guide.on { display: block; }
+    .guide .arrow {
+      position: absolute; top: 8px; left: 14px;
+      font-size: 34px; line-height: 1; color: var(--terra);
+    }
+    .guide strong { display: block; font-size: 16px; margin: 28px 8px 6px; }
+    .guide span { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .status { font-size: 12px; font-weight: 700; color: var(--muted); min-height: 1.3em; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <img src="../../shop/img/pini.jpg" alt="פיני" width="52" height="52">
+      <h1>בדיקות יציאה מטיקטוק</h1>
+    </div>
+    <p class="lead">לחצו על ניסיון אחד בכל פעם. אם זה עובד, האתר ייפתח בדפדפן של הטלפון. אם מופיעה שגיאה, חזרו לכאן ונסו את הבא. הדף מדווח לבד איזה כפתור עבד.</p>
+    <div class="phone" id="phone">בודק איזה טלפון…</div>
+
+    <section class="sec" id="sec-android">
+      <h2>אנדרואיד <span class="badge" id="badge-android">לא הטלפון הזה</span></h2>
+
+      <div class="card">
+        <p>ניסיון 1 — קישור מערכת, בלי לכפות כרום. כך רוב הכלים עושים את זה.</p>
+        <a class="go" data-id="a1" data-title="א1 בלי כרום">ניסיון 1 · אנדרואיד</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 2 — אותו דבר, עם הוראה מפורשת לפתוח בדפדפן.</p>
+        <a class="go" data-id="a2" data-title="א2 VIEW">ניסיון 2 · אנדרואיד</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 3 — פתיחה ישירה של אפליקציית כרום.</p>
+        <a class="go" data-id="a3" data-title="א3 googlechrome">ניסיון 3 · אנדרואיד</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 4 — הורדת קובץ קטן. אם טיקטוק לא יודע לפתוח אותו, הוא עלול להעביר אותו לדפדפן.</p>
+        <a class="go" data-id="a4" data-title="א4 הורדת HTML">ניסיון 4 · אנדרואיד</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 5 — הורדת PDF עם קישור לחנות.</p>
+        <a class="go" data-id="a5" data-title="א5 הורדת PDF">ניסיון 5 · אנדרואיד</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 6 — פתיחה בחלון חדש.</p>
+        <a class="go" data-id="a6" data-title="א6 חלון חדש" target="_blank" rel="noopener">ניסיון 6 · אנדרואיד</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 7 — כמו הכפתור בדף הנחיתה, שכפה כרום (זה שנכשל אצלך).</p>
+        <a class="go" data-id="a7" data-title="א7 כרום בכפייה">ניסיון 7 · אנדרואיד</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 8 — כתובת מסוג אחר שטיקטוק לפעמים מעביר למערכת.</p>
+        <a class="go" data-id="a8" data-title="א8 android-app">ניסיון 8 · אנדרואיד</a>
+      </div>
+    </section>
+
+    <section class="sec" id="sec-ios">
+      <h2>אייפון <span class="badge" id="badge-ios">לא הטלפון הזה</span></h2>
+
+      <div class="card">
+        <p>ניסיון 1 — בקשה לפתוח בספארי. הניסיון הנפוץ ביותר באייפון.</p>
+        <a class="go" data-id="i1" data-title="אי1 ספארי">ניסיון 1 · אייפון</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 2 — פתיחה בכרום, אם הוא מותקן באייפון.</p>
+        <a class="go" data-id="i2" data-title="אי2 כרום">ניסיון 2 · אייפון</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 3 — כתובת אחרת של כרום לאייפון.</p>
+        <a class="go" data-id="i3" data-title="אי3 כרום ישן">ניסיון 3 · אייפון</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 4 — פתיחה בפיירפוקס, אם הוא מותקן.</p>
+        <a class="go" data-id="i4" data-title="אי4 פיירפוקס">ניסיון 4 · אייפון</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 5 — הורדת קובץ, למקרה שאייפון יעביר אותו לספארי.</p>
+        <a class="go" data-id="i5" data-title="אי5 הורדה">ניסיון 5 · אייפון</a>
+      </div>
+      <div class="card">
+        <p>ניסיון 6 — מדריך קצר: אין קישור שעושה את שלוש הנקודות בשבילכם, אבל אפשר להראות בדיוק איפה ללחוץ.</p>
+        <button type="button" class="go" data-id="i6" data-title="אי6 מדריך" data-guide="1">ניסיון 6 · אייפון</button>
+        <div class="guide" id="guide">
+          <div class="arrow">↗️</div>
+          <strong>לחצו על ⋯ למעלה ואז על «פתיחה בדפדפן»</strong>
+          <span>משם האתר ייפתח בספארי, ומשם אפשר לקנות באפליקציה</span>
+        </div>
+      </div>
+    </section>
+    <p class="status" id="status"></p>
+  </div>
+  <script>
+  (function () {
+    var SHOP = "https://galkrisi43-beep.github.io/tg/shop/";
+    var API = "https://84-13-70-240.sslip.io";
+
+    function isAndroid() { return /Android/i.test(navigator.userAgent || ""); }
+    function isIOS() { return /iPhone|iPad|iPod/i.test(navigator.userAgent || ""); }
+    function inAppName() {
+      var ua = navigator.userAgent || "";
+      if (/BytedanceWebview|TikTok|musical_ly/i.test(ua)) return "tiktok";
+      if (/Barcelona/i.test(ua)) return "threads";
+      if (/Instagram/i.test(ua)) return "instagram";
+      if (/FBAN|FBAV|FB_IAB/i.test(ua)) return "facebook";
+      return "";
+    }
+    function source() {
+      var ua = (navigator.userAgent || "").toLowerCase();
+      if (inAppName() === "tiktok" || /tiktok|musical_ly/.test(ua)) return "tiktok";
+      if (inAppName() === "instagram") return "instagram";
+      return "direct";
+    }
+    function device() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "") ? "mobile" : "desktop";
+    }
+    function inapp() { return inAppName() || "none"; }
+
+    function intentUrl(url, extras) {
+      var path = String(url || "").replace(/^https?:\/\//i, "");
+      return "intent://" + path + "#Intent;scheme=https;" + (extras || "") +
+        "S.browser_fallback_url=" + encodeURIComponent(url) + ";end";
+    }
+
+    var hrefs = {
+      a1: intentUrl(SHOP, ""),
+      a2: intentUrl(SHOP, "action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;"),
+      a3: "googlechrome://navigate?url=" + encodeURIComponent(SHOP),
+      a4: API + "/go/html",
+      a5: API + "/go/pdf",
+      a6: SHOP,
+      a7: intentUrl(SHOP, "package=com.android.chrome;"),
+      a8: "android-app://com.android.chrome/https/" + SHOP.replace(/^https:\/\//, ""),
+      i1: SHOP.replace(/^https:\/\//i, "x-safari-https://").replace(/^http:\/\//i, "x-safari-http://"),
+      i2: "googlechromes://" + SHOP.replace(/^https:\/\//i, ""),
+      i3: "googlechrome://navigate?url=" + encodeURIComponent(SHOP),
+      i4: "firefox://open-url?url=" + encodeURIComponent(SHOP),
+      i5: API + "/go/html"
+    };
+
+    function track(ev) {
+      var payload = Object.assign({
+        ts: Math.floor(Date.now() / 1000),
+        source: source(),
+        device: device(),
+        inapp: inapp(),
+        page: "gotest",
+        kind: "cta"
+      }, ev);
+      try {
+        fetch(API + "/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ events: [payload] }),
+          credentials: "include",
+          keepalive: true
+        }).catch(function () {});
+      } catch (e) {}
+    }
+
+    var leaveTimer = null;
+    function armLeave(id, title) {
+      if (leaveTimer) { clearTimeout(leaveTimer); leaveTimer = null; }
+      var sent = false;
+      function hit() {
+        if (sent) return;
+        if (document.visibilityState === "hidden" || document.hidden) {
+          sent = true;
+          track({ q: "left", product_id: id, title: title, product_title: title });
+          setStatus("נראה שהדף נעלם אחרי «" + title + "» — ייתכן שזה עבד");
+        }
+      }
+      document.addEventListener("visibilitychange", hit);
+      window.addEventListener("pagehide", hit);
+      leaveTimer = setTimeout(function () {
+        document.removeEventListener("visibilitychange", hit);
+        window.removeEventListener("pagehide", hit);
+      }, 12000);
+    }
+
+    function setStatus(t) {
+      var el = document.getElementById("status");
+      if (el) el.textContent = t || "";
+    }
+
+    var phone = document.getElementById("phone");
+    if (isAndroid()) {
+      phone.textContent = "הטלפון הזה: אנדרואיד" + (inAppName() ? " · בתוך " + inAppName() : "");
+      document.getElementById("badge-android").textContent = "הטלפון הזה";
+      document.getElementById("badge-android").classList.add("here");
+      document.getElementById("sec-ios").classList.add("dim");
+    } else if (isIOS()) {
+      phone.textContent = "הטלפון הזה: אייפון" + (inAppName() ? " · בתוך " + inAppName() : "");
+      document.getElementById("badge-ios").textContent = "הטלפון הזה";
+      document.getElementById("badge-ios").classList.add("here");
+      document.getElementById("sec-android").classList.add("dim");
+    } else {
+      phone.textContent = "לא זוהה טלפון — מוצגים כל הניסיונות";
+    }
+
+    document.querySelectorAll("[data-id]").forEach(function (el) {
+      var id = el.getAttribute("data-id");
+      var title = el.getAttribute("data-title") || id;
+      if (hrefs[id] && el.tagName === "A") el.setAttribute("href", hrefs[id]);
+      el.addEventListener("click", function (ev) {
+        track({ q: "tap", product_id: id, title: title, product_title: title });
+        armLeave(id, title);
+        setStatus("נלחץ: " + title);
+        if (el.getAttribute("data-guide") === "1") {
+          ev.preventDefault();
+          document.getElementById("guide").classList.add("on");
+          return;
+        }
+        if (id === "a6") {
+          try { window.open(SHOP, "_blank", "noopener"); } catch (e) {}
+        }
+      });
+    });
+
+    track({ kind: "page", q: "view" });
+  })();
+  </script>
+</body>
+</html>
