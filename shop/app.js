@@ -1,0 +1,344 @@
+(function () {
+  "use strict";
+
+  const CATS = [
+    { key: "car", name: "רכב", svg: "car" },
+    { key: "kitchen", name: "מטבח", svg: "bag" },
+    { key: "home", name: "בית", svg: "home" },
+    { key: "gadgets", name: "גאדג'טים", svg: "phone" },
+    { key: "kids", name: "ילדים", svg: "kids" },
+    { key: "beauty", name: "טיפוח", svg: "beauty" },
+    { key: "pets", name: "חיות מחמד", svg: "paw" },
+    { key: "tools", name: "כלים", svg: "tools" },
+  ];
+  const ICONS = {
+    bag: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11h16l-1.2 9.2A2 2 0 0 1 16.8 22H7.2a2 2 0 0 1-2-1.8L4 11z" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    home: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 20v-8.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 21.5v-6h4v6" stroke="currentColor" stroke-width="1.8"/></svg>',
+    car: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 13l2.2-5.2A2 2 0 0 1 7.1 7h9.8a2 2 0 0 1 1.9.8L21 13v6H3v-6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="16.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="16.5" r="1.5" fill="currentColor"/><path d="M3 13h18" stroke="currentColor" stroke-width="1.8"/></svg>',
+    phone: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="7" y="3" width="10" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>',
+    kids: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="9" r="2.2" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="9" r="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 18c.6-3 2.8-4.5 5.5-4.5.9 0 1.7.2 2.4.5M12 14c.7-.3 1.5-.5 2.4-.5 2.7 0 4.9 1.5 5.6 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+    beauty: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 10.5c0-2.5 1.5-4.5 4-4.5s4 2 4 4.5c0 3.2-4 6.5-4 6.5S8 13.7 8 10.5z" stroke="currentColor" stroke-width="1.8"/><path d="M9 3.5c.8 1.2.9 2.4.4 3.4M15 3.5c-.8 1.2-.9 2.4-.4 3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+    paw: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="6.5" cy="8" r="1.7" fill="currentColor"/><circle cx="17.5" cy="8" r="1.7" fill="currentColor"/><circle cx="4.8" cy="13" r="1.7" fill="currentColor"/><circle cx="19.2" cy="13" r="1.7" fill="currentColor"/><ellipse cx="12" cy="15.2" rx="4.2" ry="3.4" stroke="currentColor" stroke-width="1.7"/></svg>',
+    tools: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M14 4.5l2.2 2.2-8.5 8.5-2.2.3.3-2.2L14 4.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M4 20h7M16.5 10.5l2 2 2.2-2.2a1.6 1.6 0 0 0 0-2.3L19 6.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+    search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="#A09080" stroke-width="2"/><path d="M16 16l5 5" stroke="#A09080" stroke-width="2" stroke-linecap="round"/></svg>',
+    back: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M6 3l6 5-6 5" stroke="#2A2118" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  };
+
+  const root = document.getElementById("app");
+  const state = { videos: [], hot: [], query: "", price: 0, page: "home", cat: null, failed: false };
+
+  function ils(n) {
+    if (n == null || n === "") return "";
+    return "₪" + Number(n).toFixed(2);
+  }
+  function num(n) {
+    return Number(n || 0).toLocaleString("en-US");
+  }
+  function isAffiliate(url) {
+    return typeof url === "string" && url.indexOf("s.click.aliexpress.com") !== -1;
+  }
+  function openBuy(url, ev) {
+    if (ev) ev.preventDefault();
+    if (!isAffiliate(url)) return;
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && typeof tg.openLink === "function") tg.openLink(url);
+    else window.open(url, "_blank", "noopener");
+  }
+  function esc(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function card(p) {
+    if (!p || !isAffiliate(p.link)) return "";
+    const disc = p.discount && p.discount >= 8
+      ? '<div class="badge" dir="ltr">-' + p.discount + "%</div>"
+      : "";
+    const was = p.orig ? '<span class="was">' + ils(p.orig) + "</span>" : "";
+    let stats = "";
+    if (p.stars) {
+      stats = '<div class="stats"><span class="star">★</span> ' + p.stars;
+      if (p.orders) stats += " · " + num(p.orders) + " הזמנות";
+      stats += "</div>";
+    } else if (p.orders) {
+      stats = '<div class="stats">' + num(p.orders) + " הזמנות</div>";
+    }
+    return (
+      '<article class="card">' +
+        '<div class="pic"><img src="' + esc(p.image) + '" alt="' + esc(p.title) + '">' + disc + "</div>" +
+        '<div class="meta">' +
+          '<div class="name">' + esc(p.title) + "</div>" +
+          (p.desc ? '<div class="desc">' + esc(p.desc) + "</div>" : "") +
+          '<div class="price"><span class="now">' + ils(p.price) + "</span>" + was + "</div>" +
+          stats +
+          '<button type="button" class="buy" data-link="' + esc(p.link) + '">לרכישה</button>' +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function underPrice(p) {
+    if (!state.price) return true;
+    return Number(p.price) <= state.price;
+  }
+  function matchesQuery(p, q) {
+    if (!q) return true;
+    const blob = ((p.title || "") + " " + (p.desc || "")).toLowerCase();
+    return blob.indexOf(q) !== -1;
+  }
+  function allProducts() {
+    const out = [];
+    state.videos.forEach(function (g) {
+      (g.products || []).forEach(function (p) { out.push(p); });
+    });
+    (state.hot || []).forEach(function (p) { out.push(p); });
+    return out;
+  }
+  function uniqueById(list) {
+    const seen = {}, out = [];
+    list.forEach(function (p) {
+      if (!p || !p.id || seen[p.id]) return;
+      seen[p.id] = 1;
+      out.push(p);
+    });
+    return out;
+  }
+  function catsWithItems() {
+    const have = {};
+    allProducts().forEach(function (p) { if (p.cat) have[p.cat] = 1; });
+    return CATS.filter(function (c) { return have[c.key]; });
+  }
+
+  function bind(el) {
+    el.querySelectorAll("[data-link]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) { openBuy(btn.getAttribute("data-link"), e); });
+    });
+    el.querySelectorAll("[data-go]").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        const go = a.getAttribute("data-go");
+        if (go === "videos") { e.preventDefault(); nav("videos"); }
+        else if (go === "home") { e.preventDefault(); nav("home"); }
+        else if (go.indexOf("cat:") === 0) { e.preventDefault(); nav("cat", { cat: go.slice(4) }); }
+      });
+    });
+    const inp = el.querySelector("#q");
+    if (inp) {
+      inp.addEventListener("input", function () {
+        state.query = inp.value.trim();
+        if (state.query) nav("search", { query: state.query, replace: true });
+        else if (state.page === "search") nav("home", { replace: true });
+      });
+    }
+    el.querySelectorAll("[data-price]").forEach(function (c) {
+      c.addEventListener("click", function () {
+        state.price = Number(c.getAttribute("data-price")) || 0;
+        draw();
+      });
+    });
+  }
+
+  function priceChips() {
+    const opts = [[0, "הכל"], [30, "עד ₪30"], [50, "עד ₪50"], [100, "עד ₪100"]];
+    return '<div class="filters">' + opts.map(function (o) {
+      const on = Number(state.price) === o[0] ? " on" : "";
+      return '<button type="button" class="chip' + on + '" data-price="' + o[0] + '">' + o[1] + "</button>";
+    }).join("") + "</div>";
+  }
+  function catRow(selected) {
+    const list = catsWithItems();
+    if (!list.length) return "";
+    return '<div class="cats">' + list.map(function (c) {
+      const on = selected === c.key ? " sel" : "";
+      return '<button type="button" class="cat' + on + '" data-go="cat:' + c.key + '"><div class="bubble">' +
+        ICONS[c.svg] + "</div><label>" + esc(c.name) + "</label></button>";
+    }).join("") + "</div>";
+  }
+  function searchBar(placeholder) {
+    return '<div class="search">' + ICONS.search +
+      '<input id="q" type="search" enterkeyhint="search" placeholder="' + esc(placeholder || "מה אתם מחפשים?") +
+      '" value="' + esc(state.query) + '" autocomplete="off"></div>';
+  }
+  function header(home) {
+    if (home) {
+      return '<div class="top"><img src="img/pini.jpg" alt="פיני"><div>' +
+        "החנות של פיני".replace(/^/, "<h1>") + "</h1>" +
+        "<p>דילים מהסרטונים, מחיר בשקלים</p></div></div>";
+    }
+    return "";
+  }
+  function backHead(title, sub, href) {
+    return '<div class="backrow"><a class="back" href="' + esc(href || "index.html") + '" data-go="home" aria-label="חזרה">' +
+      ICONS.back + "</a><div><h1>" + esc(title) + "</h1>" +
+      (sub ? "<p>" + esc(sub) + "</p>" : "") + "</div></div>";
+  }
+  function gridOrEmpty(items, emptyHtml) {
+    const vis = items.filter(underPrice);
+    if (!vis.length) return emptyHtml || '<div class="empty">לא מצאנו מוצרים במחיר הזה.</div>';
+    return '<div class="grid">' + vis.map(card).join("") + "</div>";
+  }
+
+  function viewHome() {
+    const latest = state.videos[0];
+    const thumbs = ((latest && latest.products) || []).slice(0, 5).map(function (p) {
+      return p.image ? '<img src="' + esc(p.image) + '" alt="">' : "";
+    }).join("");
+    let html = header(true);
+    html += '<a class="hero" href="videos.html" data-go="videos">' +
+      '<div class="thumbs">' + thumbs + "</div>" +
+      '<div class="label">הכי קל להתחיל מכאן</div>' +
+      "📺 המוצרים מהסרטונים".replace(/^/, "<h2>") + "</h2>" +
+      '<div class="sub">כל המוצרים מהטיקטוק, לפי סרטון. מהחדש לישן.</div>' +
+      '<div class="go">לכל המוצרים מהסרטונים ←</div>' +
+    "</a>";
+    html += searchBar();
+    html += '<div class="sec"><h2>דילים חמים</h2></div>';
+    html += priceChips();
+    const hot = (state.hot || []).filter(function (p) { return matchesQuery(p, state.query); });
+    html += gridOrEmpty(hot, '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
+    const cats = catsWithItems();
+    if (cats.length) {
+      html += '<div class="sec" style="margin-top:22px"><h2>קטגוריות</h2></div>';
+      html += catRow(null);
+    }
+    return html;
+  }
+
+  function viewVideos() {
+    let html = backHead("המוצרים מהסרטונים", "כל המוצרים מהסרטונים, מהחדש לישן", "index.html");
+    html += searchBar("חיפוש במוצרים מהסרטונים…");
+    html += priceChips();
+    const q = state.query;
+    let shown = 0;
+    (state.videos || []).forEach(function (g) {
+      const items = (g.products || []).filter(function (p) { return matchesQuery(p, q) && underPrice(p); });
+      if (!items.length) return;
+      shown += items.length;
+      const when = g.date_label ? g.date_label : "";
+      html += '<section class="group"><div class="ghead"><h2>' + esc(g.headline) + "</h2>" +
+        (when ? '<div class="when">' + esc(when) + "</div>" : "") + "</div>";
+      html += '<div class="grid">' + items.map(card).join("") + "</div></section>";
+    });
+    if (!shown) {
+      html += '<div class="empty">לא מצאנו מוצר כזה.' +
+        (q ? "" : "") + '<br><a href="index.html" data-go="home">חזרה לחנות</a></div>';
+    }
+    return html;
+  }
+
+  function viewCat() {
+    const meta = CATS.filter(function (c) { return c.key === state.cat; })[0];
+    const name = meta ? meta.name : "";
+    let html = backHead(name, "מוצרים נבחרים", "index.html");
+    html += searchBar("חיפוש ב" + name + "…");
+    html += catRow(state.cat);
+    html += priceChips();
+    const items = uniqueById(allProducts().filter(function (p) {
+      return p.cat === state.cat && matchesQuery(p, state.query);
+    }));
+    html += gridOrEmpty(items, '<div class="empty">אין עדיין מוצרים בקטגוריה הזו.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
+    return html;
+  }
+
+  function viewSearch() {
+    let html = backHead("חיפוש", state.query ? "תוצאות ל«" + state.query + "»" : "כתבו מה אתם מחפשים", "index.html");
+    html += searchBar();
+    html += priceChips();
+    const items = uniqueById(allProducts().filter(function (p) { return matchesQuery(p, state.query); }));
+    html += gridOrEmpty(items, '<div class="empty">לא מצאנו. נסו מילה אחרת, או היכנסו למוצרים מהסרטונים.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
+    return html;
+  }
+
+  function draw() {
+    if (state.failed && !state.videos.length && !state.hot.length) {
+      root.innerHTML = header(true) +
+        '<div class="err">משהו השתבש בטעינת המוצרים. אפשר לחזור לבוט ולחפש שם כרגיל — החנות לא משפיעה עליו.</div>';
+      return;
+    }
+    let html = "";
+    if (state.page === "videos") html = viewVideos();
+    else if (state.page === "cat") html = viewCat();
+    else if (state.page === "search") html = viewSearch();
+    else html = viewHome();
+    root.innerHTML = html;
+    bind(root);
+    window.scrollTo(0, 0);
+  }
+
+  function urlFor(page, opts) {
+    opts = opts || {};
+    if (page === "videos") return "videos.html";
+    if (page === "cat" && opts.cat) return "index.html?c=" + encodeURIComponent(opts.cat);
+    if (page === "search" && opts.query) return "index.html?q=" + encodeURIComponent(opts.query);
+    return "index.html";
+  }
+  function nav(page, opts) {
+    opts = opts || {};
+    state.page = page;
+    if (page !== "search") state.query = page === "cat" ? state.query : (opts.query || "");
+    if (opts.query != null) state.query = opts.query;
+    if (page === "cat") state.cat = opts.cat;
+    else state.cat = null;
+    if (page === "home") { state.query = opts.query || ""; state.price = state.price; }
+    const url = urlFor(page, { cat: state.cat, query: state.query });
+    if (opts.replace) history.replaceState({ page: page, cat: state.cat, query: state.query }, "", url);
+    else history.pushState({ page: page, cat: state.cat, query: state.query }, "", url);
+    draw();
+  }
+
+  function parseEntry() {
+    const q = new URLSearchParams(location.search);
+    const path = (location.pathname || "").toLowerCase();
+    const hash = (location.hash || "").replace(/^#/, "").toLowerCase();
+    if (q.get("v") === "videos" || q.get("section") === "videos" || hash === "videos" ||
+        /videos\.html$/.test(path) || /\/videos\/?$/.test(path)) {
+      state.page = "videos";
+      return;
+    }
+    if (q.get("c")) { state.page = "cat"; state.cat = q.get("c"); return; }
+    if (hash.indexOf("cat=") === 0) { state.page = "cat"; state.cat = hash.slice(4); return; }
+    if (q.get("q")) { state.page = "search"; state.query = q.get("q"); return; }
+    state.page = "home";
+  }
+
+  function initTg() {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg) return;
+    try {
+      tg.ready();
+      if (tg.expand) tg.expand();
+      if (tg.setHeaderColor) tg.setHeaderColor("#FFF8F1");
+      if (tg.setBackgroundColor) tg.setBackgroundColor("#F7EFE4");
+    } catch (e) {}
+  }
+
+  function loadJSON(url) {
+    return fetch(url, { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error("http");
+      return r.json();
+    });
+  }
+
+  parseEntry();
+  initTg();
+  Promise.all([
+    loadJSON("data/videos.json").catch(function () { state.failed = true; return { groups: [] }; }),
+    loadJSON("data/hot.json").catch(function () { state.failed = true; return { products: [] }; }),
+  ]).then(function (pair) {
+    state.videos = (pair[0] && pair[0].groups) || [];
+    state.hot = (pair[1] && pair[1].products) || [];
+    if (!state.videos.length && !state.hot.length) state.failed = true;
+    draw();
+  });
+  window.addEventListener("popstate", function (e) {
+    if (e.state && e.state.page) {
+      state.page = e.state.page;
+      state.cat = e.state.cat || null;
+      state.query = e.state.query || "";
+      draw();
+    } else {
+      parseEntry();
+      draw();
+    }
+  });
+})();

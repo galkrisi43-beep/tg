@@ -1,0 +1,36 @@
+{
+  "categories": [
+    {
+      "key": "car",
+      "name": "רכב"
+    },
+    {
+      "key": "kitchen",
+      "name": "מטבח"
+    },
+    {
+      "key": "home",
+      "name": "בית"
+    },
+    {
+      "key": "gadgets",
+      "name": "גאדג'טים"
+    },
+    {
+      "key": "beauty",
+      "name": "טיפוח"
+    },
+    {
+      "key": "pets",
+      "name": "חיות מחמד"
+    },
+    {
+      "key": "kids",
+      "name": "ילדים"
+    },
+    {
+      "key": "tools",
+      "name": "כלים"
+    }
+  ]
+}
