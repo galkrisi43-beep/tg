@@ -96,12 +96,20 @@
   function openBuy(url, ev) {
     if (ev) ev.preventDefault();
     if (!isAffiliate(url)) return;
+    const btn = ev && ev.currentTarget;
+    track({
+      kind: "buy",
+      product_id: btn && btn.getAttribute("data-id"),
+      title: btn && btn.getAttribute("data-title"),
+      price: btn && btn.getAttribute("data-price"),
+      section: (btn && btn.getAttribute("data-section")) || "search",
+    });
     const tg = window.Telegram && window.Telegram.WebApp;
     const finish = function (dest) { launchAli(dest || url, url); };
     // Resolve s.click first so the app opens on a URL that already has affiliate params.
     const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
     const timer = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) {} }, 2500);
-    const opts = { headers: { Accept: "application/json" } };
+    const opts = { headers: trackHeaders() };
     if (ctl) opts.signal = ctl.signal;
     fetch(API_BASE + "/resolve?url=" + encodeURIComponent(url), opts)
       .then(function (r) { return r.json(); })
@@ -122,6 +130,79 @@
       });
   }
   const API_BASE = "https://84-13-70-240.sslip.io";
+  function isShopTest() {
+    try {
+      if (/[?&]ctest=1/.test(location.search || "")) {
+        try { localStorage.setItem("pini_ctest", "1"); } catch (e) {}
+      }
+      return localStorage.getItem("pini_ctest") === "1";
+    } catch (e) {
+      return /[?&]ctest=1/.test(location.search || "");
+    }
+  }
+  function deviceType() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "") ? "mobile" : "desktop";
+  }
+  function inappType() {
+    const ua = navigator.userAgent || "";
+    if (/BytedanceWebview|TikTok|musical_ly/i.test(ua)) return "tiktok";
+    if (/Instagram/i.test(ua)) return "instagram";
+    if (/Telegram/i.test(ua)) return "telegram";
+    if (/FBAN|FBAV|FB_IAB/i.test(ua)) return "facebook";
+    if (/WhatsApp/i.test(ua)) return "whatsapp";
+    if (/; wv\)/.test(ua)) return "other";
+    return "none";
+  }
+  function trafficSource() {
+    try {
+      const saved = sessionStorage.getItem("pini_src");
+      if (saved) return saved;
+    } catch (e) {}
+    let ref = "";
+    try { ref = document.referrer || ""; } catch (e) {}
+    let utm = "", frm = "";
+    try {
+      const p = new URLSearchParams(location.search);
+      utm = (p.get("utm_source") || "").toLowerCase();
+      frm = (p.get("from") || "").toLowerCase();
+    } catch (e) {}
+    const inn = inappType();
+    const blob = (utm + " " + frm + " " + ref + " " + inn).toLowerCase();
+    let src = "direct";
+    if (utm === "tiktok" || frm === "tt" || /tiktok|musical_ly/.test(blob) || inn === "tiktok") src = "tiktok";
+    else if (utm === "instagram" || /instagram/.test(blob) || inn === "instagram") src = "instagram";
+    else if (utm === "telegram" || /t\.me|telegram/.test(blob) || inn === "telegram") src = "telegram";
+    else if (utm === "whatsapp" || /whatsapp|wa\.me/.test(blob) || inn === "whatsapp") src = "whatsapp";
+    else if (ref) src = "other";
+    try { sessionStorage.setItem("pini_src", src); } catch (e) {}
+    return src;
+  }
+  function trackHeaders(extra) {
+    const h = Object.assign({
+      "Accept": "application/json",
+      "X-Pini-Source": trafficSource(),
+      "X-Pini-Device": deviceType(),
+      "X-Pini-Inapp": inappType(),
+    }, extra || {});
+    if (isShopTest()) h["X-Pini-Test"] = "1";
+    return h;
+  }
+  function track(ev) {
+    if (isShopTest() || !ev) return;
+    ev.source = ev.source || trafficSource();
+    ev.device = ev.device || deviceType();
+    ev.inapp = ev.inapp || inappType();
+    try {
+      fetch(API_BASE + "/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ events: [ev] }),
+        keepalive: true,
+        mode: "cors",
+        credentials: "omit",
+      }).catch(function () {});
+    } catch (e) {}
+  }
   const SUGGESTS = ["מנורת שקיעה", "מעמד לטלפון לרכב", "אוזניות", "בקבוק מים"];
   const FINDER_EXAMPLES = ["כבל HDMI 1.5 מטר", "מתנה לאמא עד 100", "מה כדאי לקנות לרכב"];
   const SEARCH_STEPS = ["פיני מחפש…", "מסנן מוכרים גרועים…", "בוחר את הטובים ביותר…"];
@@ -157,6 +238,13 @@
       .replace(/"/g, "&quot;");
   }
 
+  function cardSection(opts) {
+    if (opts && opts.section) return opts.section;
+    if (state.aliKind === "advice") return "advice";
+    if (state.page === "videos") return "videos";
+    if (state.aliKind === "photo" || state.aliKind === "similar" || (state.query && state.aliStatus && state.aliStatus !== "idle")) return "search";
+    return "hot";
+  }
   function card(p, opts) {
     if (!p || !isAffiliate(p.link)) return "";
     const disc = p.discount && p.discount >= 8
@@ -179,7 +267,11 @@
           (p.desc ? '<div class="desc">' + esc(p.desc) + "</div>" : "") +
           '<div class="price"><span class="now">' + ils(p.price) + "</span>" + was + "</div>" +
           stats +
-          '<button type="button" class="buy" data-link="' + esc(p.link) + '">לרכישה</button>' +
+          '<button type="button" class="buy" data-link="' + esc(p.link) +
+            '" data-id="' + esc(p.id || "") +
+            '" data-title="' + esc(p.title || "") +
+            '" data-price="' + esc(p.price == null ? "" : p.price) +
+            '" data-section="' + esc(cardSection(opts)) + '">לרכישה</button>' +
           (opts && opts.similar && p.id ? '<button type="button" class="more" data-similar="' + esc(p.id) + '">עוד כאלה</button>' : "") +
         "</div>" +
       "</article>"
@@ -229,6 +321,11 @@
         if (go === "videos") { e.preventDefault(); nav("videos"); }
         else if (go === "home") { e.preventDefault(); nav("home"); }
         else if (go.indexOf("cat:") === 0) { e.preventDefault(); nav("cat", { cat: go.slice(4) }); }
+      });
+    });
+    el.querySelectorAll("[data-group]").forEach(function (a) {
+      a.addEventListener("click", function () {
+        track({ kind: "group", group: a.getAttribute("data-group") });
       });
     });
     bindSearch(el.querySelector("#q"));
@@ -393,7 +490,7 @@
     fetch(API_BASE + path, {
       signal: ctl.signal,
       cache: "no-store",
-      headers: { "Accept": "application/json" },
+      headers: trackHeaders(),
     })
       .then(function (r) {
         return r.json().then(function (data) { return { status: r.status, data: data || {} }; })
@@ -450,7 +547,7 @@
     const have = (state.aliProducts || []).map(function (p) { return p.id; }).filter(Boolean);
     fetch(API_BASE + "/similar?id=" + encodeURIComponent(id) + (have.length ? "&exclude=" + encodeURIComponent(have.join(",")) : ""), {
       cache: "no-store",
-      headers: { "Accept": "application/json" },
+      headers: trackHeaders(),
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
@@ -493,7 +590,7 @@
       return fetch(API_BASE + "/photo", {
         method: "POST",
         cache: "no-store",
-        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        headers: trackHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ image: dataUrl, mime: "image/jpeg" }),
       }).then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data || {} }; }); });
     }).then(function (pack) {
@@ -662,9 +759,9 @@
     return '<div class="groups">' +
       '<p>רוצים דילים ישר לטלפון? הצטרפו לקבוצות</p>' +
       '<div class="groups-row">' +
-        '<a href="' + wa + '" target="_blank" rel="noopener">'+ icoWa + 'וואטסאפ</a>' +
-        '<a href="' + ch + '" target="_blank" rel="noopener">'+ icoTg + 'ערוץ טלגרם</a>' +
-        '<a href="' + gr + '" target="_blank" rel="noopener">'+ icoTg + 'קבוצת טלגרם</a>' +
+        '<a href="' + wa + '" target="_blank" rel="noopener" data-group="wa">'+ icoWa + 'וואטסאפ</a>' +
+        '<a href="' + ch + '" target="_blank" rel="noopener" data-group="tg_channel">'+ icoTg + 'ערוץ טלגרם</a>' +
+        '<a href="' + gr + '" target="_blank" rel="noopener" data-group="tg_group">'+ icoTg + 'קבוצת טלגרם</a>' +
       "</div></div>";
   }
 
@@ -834,6 +931,7 @@
     bind(root);
     window.scrollTo(0, 0);
     if (state.page === "home" && !(state.query || "").trim()) startPlaceholder();
+    track({ kind: "page", page: state.page === "videos" ? "videos" : (state.page === "cat" ? "cat" : "home") });
   }
 
   function urlFor(page, opts) {
