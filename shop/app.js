@@ -25,7 +25,7 @@
   };
 
   const root = document.getElementById("app");
-  const state = { videos: [], hot: [], query: "", price: 0, page: "home", cat: null, failed: false, sort: "", aliStatus: "idle", aliProducts: [], aliReply: "", aliKind: "" };
+  const state = { videos: [], hot: [], query: "", price: 0, page: "home", cat: null, failed: false, sort: "", aliStatus: "idle", aliProducts: [], aliReply: "", aliKind: "", lastSearchQuery: "" };
 
   function ils(n) {
     if (n == null || n === "") return "";
@@ -304,6 +304,9 @@
     } else {
       path = "/search?q=" + encodeURIComponent(q);
       if (state.sort) path += "&sort=" + encodeURIComponent(state.sort);
+      if (state.lastSearchQuery && state.lastSearchQuery !== q) {
+        path += "&prev=" + encodeURIComponent(state.lastSearchQuery);
+      }
     }
     fetch(API_BASE + path, {
       signal: ctl.signal,
@@ -337,6 +340,9 @@
         state.aliProducts = list;
         state.aliReply = data.reply || "";
         state.aliKind = data.kind || "search";
+        if (data.kind !== "offtopic" && (data.understood || data.q || q)) {
+          state.lastSearchQuery = data.understood || data.q || q;
+        }
         if (data.kind === "offtopic") state.aliStatus = "advice";
         else state.aliStatus = list.length ? "ok" : "empty";
         drawResults();
@@ -395,6 +401,7 @@
     state.aliStatus = "loading";
     state.aliReply = "";
     state.query = "";
+    state.lastSearchQuery = "";
     const inp = document.getElementById("q");
     if (inp) inp.value = "";
     drawResults();
