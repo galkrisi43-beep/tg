@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#F7EFE4">
   <meta name="robots" content="noindex">
   <title>החנות של פיני</title>
+  <!-- v=17 -->
   <style>
     @font-face {
       font-family: Assistant;
@@ -124,8 +125,6 @@
       return u.toString();
     }
 
-    function isAndroid() { return /Android/i.test(navigator.userAgent || ""); }
-    function isIOS() { return /iPhone|iPad|iPod/i.test(navigator.userAgent || ""); }
     function inAppName() {
       var ua = navigator.userAgent || "";
       if (/BytedanceWebview|TikTok|musical_ly/i.test(ua)) return "tiktok";
@@ -139,20 +138,6 @@
       return !!inAppName()
         || /Line\/|Snapchat|Twitter|Pinterest|MicroMessenger/i.test(ua)
         || (/Android/i.test(ua) && /; wv\)/.test(ua));
-    }
-
-    function chromeIntent(url) {
-      var path = String(url || "").replace(/^https?:\/\//i, "");
-      return "intent://" + path + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
-        encodeURIComponent(url) + ";end";
-    }
-    function safariEscape(url) {
-      return String(url || "").replace(/^https:\/\//i, "x-safari-https://").replace(/^http:\/\//i, "x-safari-http://");
-    }
-    function buttonHref(url) {
-      if (isAndroid()) return chromeIntent(url);
-      if (isIOS()) return safariEscape(url);
-      return url;
     }
 
     function source() {
@@ -203,13 +188,9 @@
     }
 
     if (btn) {
-      btn.setAttribute("href", buttonHref(dest));
+      btn.setAttribute("href", dest);
       btn.addEventListener("click", function () {
         track({ kind: "cta" });
-        if (!isIOS()) return;
-        setTimeout(function () {
-          if (document.visibilityState === "visible") location.href = dest;
-        }, 1400);
       });
     }
     track({ kind: "page" });

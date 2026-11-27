@@ -76,6 +76,7 @@
   function launchHref(dest) {
     dest = String(dest || "");
     if (!dest) return dest;
+    if (needsBuySheet()) return dest;
     if (isAndroid()) return aliIntent(dest);
     return dest;
   }
@@ -230,7 +231,7 @@
   function launchAli(dest, fallback) {
     const start = dest || fallback;
     if (!start) return;
-    if (isAndroid()) {
+    if (isAndroid() && !needsBuySheet()) {
       window.location.href = aliIntent(start);
       return;
     }
