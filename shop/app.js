@@ -269,7 +269,7 @@
       step += 1;
       const box = document.getElementById("results");
       if (!box || state.aliStatus !== "loading") { clearInterval(progressTimer); return; }
-      const msgs = ["מחפש בכל אלי אקספרס…", "עוד רגע, פיני בודק מחירים בשקלים…", "מסנן מוצרים איכותיים…"];
+      const msgs = ["פיני מחפש…", "עוד רגע, פיני בודק מחירים בשקלים…", "מסנן מוצרים איכותיים…"];
       const empty = box.querySelector(".empty.loading");
       if (empty) empty.textContent = msgs[Math.min(step, msgs.length - 1)];
     }, 3500);
@@ -522,7 +522,7 @@
     const searching = q.length >= 2 || state.aliKind === "photo" || state.aliKind === "similar" || state.aliStatus === "loading";
     if (searching) {
       if (state.aliStatus === "loading") {
-        return '<div class="empty loading">מחפש בכל אלי אקספרס…</div>';
+        return '<div class="empty loading">פיני מחפש…</div>';
       }
       if (state.aliStatus === "error") {
         return '<div class="empty">' + esc(state.aliReply || "החיפוש באתר לא הצליח כרגע. נסו שוב בעוד רגע.") + "</div>" + suggestions();
