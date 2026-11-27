@@ -44,6 +44,25 @@
     if (tg && typeof tg.openLink === "function") tg.openLink(url);
     else window.open(url, "_blank", "noopener");
   }
+  const BOT_URL = "https://t.me/Pinizolbot";
+  function openBot(ev) {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && typeof tg.openTelegramLink === "function") {
+      if (ev) ev.preventDefault();
+      tg.openTelegramLink(BOT_URL);
+    }
+    // otherwise the href opens Telegram in a normal browser
+  }
+  function botCta(kind) {
+    if (kind === "fallback") {
+      return '<a class="bot-fallback" href="' + BOT_URL + '" data-bot="1">לא מצאתם? פיני יחפש לכם בכל אלי 🦝</a>';
+    }
+    return '<a class="botcta" href="' + BOT_URL + '" data-bot="1">' +
+      '<div class="botcta-title">🔎 פיני יחפש לכם בכל אלי</div>' +
+      '<div class="botcta-sub">כתבו מה שאתם מחפשים — בחינם</div>' +
+    "</a>";
+  }
+
   function esc(s) {
     return String(s || "")
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -115,6 +134,9 @@
     el.querySelectorAll("[data-link]").forEach(function (btn) {
       btn.addEventListener("click", function (e) { openBuy(btn.getAttribute("data-link"), e); });
     });
+    el.querySelectorAll("[data-bot]").forEach(function (a) {
+      a.addEventListener("click", openBot);
+    });
     el.querySelectorAll("[data-go]").forEach(function (a) {
       a.addEventListener("click", function (e) {
         const go = a.getAttribute("data-go");
@@ -137,6 +159,9 @@
     if (!el) return;
     el.querySelectorAll("[data-link]").forEach(function (btn) {
       btn.addEventListener("click", function (e) { openBuy(btn.getAttribute("data-link"), e); });
+    });
+    el.querySelectorAll("[data-bot]").forEach(function (a) {
+      a.addEventListener("click", openBot);
     });
     el.querySelectorAll("[data-go]").forEach(function (a) {
       a.addEventListener("click", function (e) {
@@ -233,14 +258,7 @@
   }
 
   function resultsHome() {
-    const q = (state.query || "").trim();
-    if (q) {
-      const items = uniqueById(allProducts().filter(function (p) { return matchesQuery(p, q); }));
-      return '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
-        gridOrEmpty(items, '<div class="empty">לא מצאנו. נסו מילה אחרת, או היכנסו למוצרים מהסרטונים.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
-    }
-    let html = '<div class="sec"><h2>דילים חמים</h2></div>';
-    html += gridOrEmpty((state.hot || []), '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
+    let html = gridOrEmpty((state.hot || []), '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
     const cats = catsWithItems();
     if (cats.length) {
       html += '<div class="sec" style="margin-top:22px"><h2>קטגוריות</h2></div>';
@@ -263,14 +281,16 @@
       html += '<div class="grid">' + items.map(card).join("") + "</div></section>";
     });
     if (!shown) {
-      html += '<div class="empty">לא מצאנו מוצר כזה.<br><a href="index.html" data-go="home">חזרה לחנות</a></div>';
+      html += '<div class="empty">לא מצאנו את זה בסרטונים.</div>' +
+        botCta("fallback") +
+        '<div class="empty"><a href="index.html" data-go="home">חזרה לחנות</a></div>';
     }
     return html;
   }
 
   function resultsCat() {
     const items = uniqueById(allProducts().filter(function (p) {
-      return p.cat === state.cat && matchesQuery(p, state.query);
+      return p.cat === state.cat;
     }));
     return gridOrEmpty(items, '<div class="empty">אין עדיין מוצרים בקטגוריה הזו.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
   }
@@ -294,7 +314,8 @@
       '<div class="sub">כל המוצרים מהטיקטוק, לפי סרטון. מהחדש לישן.</div>' +
       '<div class="go">לכל המוצרים מהסרטונים ←</div>' +
     "</a>";
-    html += searchBar();
+    html += botCta();
+    html += '<div class="sec"><h2>דילים חמים</h2></div>';
     html += priceChips();
     html += '<div id="results">' + resultsHome() + "</div>";
     return html;
@@ -312,7 +333,6 @@
     const meta = CATS.filter(function (c) { return c.key === state.cat; })[0];
     const name = meta ? meta.name : "";
     let html = backHead(name, "מוצרים נבחרים", "index.html");
-    html += searchBar("חיפוש ב" + name + "…");
     html += catRow(state.cat);
     html += priceChips();
     html += '<div id="results">' + resultsCat() + "</div>";
