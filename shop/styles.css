@@ -181,29 +181,6 @@ a.buy {
   text-decoration: none; box-sizing: border-box; color: #fff;
 }
 
-.escape-banner {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  background: #2A2118; color: #FFF8F1;
-  padding: 12px 14px 14px;
-  box-shadow: 0 8px 24px rgba(42,33,24,.28);
-}
-.escape-banner-inner { max-width: 520px; margin: 0 auto; text-align: center; }
-.escape-banner strong {
-  display: block; font-size: 16px; font-weight: 800; line-height: 1.35; margin-bottom: 6px;
-}
-.escape-banner p { margin: 0 0 10px; font-size: 13px; font-weight: 600; line-height: 1.45; color: #F3D2B8; }
-.escape-banner .escape-alt { margin: 8px 0 0; font-size: 12px; font-weight: 600; color: #C4B2A3; }
-.escape-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin: 2px 0 4px; }
-.escape-cta, .escape-copy {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 44px; padding: 0 18px; border-radius: 999px;
-  font-weight: 800; font-size: 15px; font-family: inherit; cursor: pointer;
-  text-decoration: none; border: 0; margin: 0 4px 4px;
-}
-.escape-banner-inner .escape-cta, .escape-banner-inner .escape-copy { margin: 0 6px 6px; }
-.escape-cta { background: var(--terra); color: #fff; }
-.escape-copy { background: transparent; color: #FFF8F1; border: 1px solid #8A7A6C; }
-body.has-escape-banner { padding-top: var(--escape-h, 210px); }
 
 .group { margin-bottom: 22px; }
 .ghead { margin: 4px 2px 10px; }

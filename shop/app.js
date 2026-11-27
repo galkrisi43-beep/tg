@@ -65,40 +65,19 @@
       ";S.browser_fallback_url=" + encodeURIComponent(raw) + ";end";
   }
   function aliIntent(url) { return intentUrl(url, "com.alibaba.aliexpresshd"); }
-  function chromeIntent(url) { return intentUrl(url, "com.android.chrome"); }
-  function safariEscapeUrl(url) {
-    return String(url || "").replace(/^https:\/\//i, "x-safari-https://").replace(/^http:\/\//i, "x-safari-http://");
-  }
-  function instagramEscapeUrl(url) {
-    return "instagram://extbrowser/?url=" + encodeURIComponent(url);
-  }
-  function shopPageUrl() {
-    try { return location.href.split("#")[0]; } catch (e) { return ""; }
-  }
   function hasAffParams(url) {
     return /aff_|aff_fcid|aff_short_key|aff_platform|aff_trace_key|albch=|dp=|sk=/.test(String(url || ""));
   }
   function isLaunchHref(h) {
     h = String(h || "");
-    return /^(intent:|x-safari-|instagram:\/\/extbrowser)/i.test(h)
+    return /^intent:/i.test(h)
       || /^https:\/\/([a-z0-9-]+\.)*aliexpress\.(com|us|ru)\//i.test(h);
   }
   function launchHref(dest) {
     dest = String(dest || "");
     if (!dest) return dest;
     if (isAndroid()) return aliIntent(dest);
-    if (isIOS() && isTrapInApp()) {
-      if (inAppName() === "instagram") return instagramEscapeUrl(dest);
-      return safariEscapeUrl(dest);
-    }
     return dest;
-  }
-  function escapeHref(url) {
-    url = url || shopPageUrl();
-    if (isAndroid()) return chromeIntent(url);
-    if (inAppName() === "instagram") return instagramEscapeUrl(url);
-    if (isIOS()) return safariEscapeUrl(url);
-    return url;
   }
   function setBuyHref(a, dest) {
     if (!a || !dest) return;
@@ -129,76 +108,6 @@
         waits.forEach(function (fn) { try { fn(null); } catch (e) {} });
       });
   }
-  function copyText(text) {
-    if (!text) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).catch(function () {});
-      return;
-    }
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
-    } catch (e) {}
-  }
-  function escapeCopyUrl(productUrl) {
-    return productUrl && /^https?:/i.test(productUrl) ? productUrl : shopPageUrl();
-  }
-  function showEscapeBanner(productUrl) {
-    if (!isTrapInApp()) return;
-    let bar = document.getElementById("escape-banner");
-    const app = inAppName();
-    const host = app === "instagram" ? "אינסטגרם" : (app === "facebook" ? "פייסבוק" : "טיקטוק");
-    const cta = isAndroid() ? "פתחו בכרום" : "פתחו בספארי";
-    const href = escapeHref(shopPageUrl());
-    const copyUrl = escapeCopyUrl(productUrl);
-    if (!bar) {
-      bar = document.createElement("div");
-      bar.id = "escape-banner";
-      bar.className = "escape-banner";
-      document.body.appendChild(bar);
-    }
-    bar.hidden = false;
-    document.body.classList.add("has-escape-banner");
-    bar.innerHTML =
-      '<div class="escape-banner-inner">' +
-        "<strong>פותחים את " + host + " בדפדפן פנימי, ומשם אי אפשר להיכנס לאפליקציית אלי אקספרס</strong>" +
-        "<p>בלי האפליקציה זה נראה חשוד, ורוב האנשים לא קונים. לחצו כאן כדי לעבור לדפדפן האמיתי — משם «לרכישה» פותח את האפליקציה.</p>" +
-        '<div class="escape-actions"><a class="escape-cta" id="escape-cta" rel="noopener">' + cta + "</a>" +
-        '<button type="button" class="escape-copy" data-act="copy">העתיקו קישור</button></div>' +
-        '<p class="escape-alt">אם זה לא נפתח: לחצו על ⋯ למעלה ובחרו «לפתוח בדפדפן»</p>' +
-      "</div>";
-    const ctaEl = document.getElementById("escape-cta");
-    if (ctaEl) ctaEl.setAttribute("href", href);
-    bar.setAttribute("data-copy", copyUrl);
-    requestAnimationFrame(function () {
-      const h = bar.offsetHeight || 210;
-      document.body.style.setProperty("--escape-h", h + "px");
-    });
-    if (!bar._bound) {
-      bar._bound = true;
-      window.addEventListener("resize", function () {
-        if (bar && !bar.hidden) document.body.style.setProperty("--escape-h", (bar.offsetHeight || 210) + "px");
-      });
-      bar.addEventListener("click", function (e) {
-        const act = (e.target && e.target.getAttribute && e.target.getAttribute("data-act")) || "";
-        if (act === "copy") {
-          e.preventDefault();
-          copyText(bar.getAttribute("data-copy") || shopPageUrl());
-          const b = e.target;
-          const prev = b.textContent;
-          b.textContent = "הקישור הועתק";
-          setTimeout(function () { b.textContent = prev; }, 1600);
-        }
-      });
-    }
-  }
   function showOpenAppPrompt(dest) {
     let bar = document.getElementById("open-hint");
     if (!bar) {
@@ -215,9 +124,7 @@
       '<button type="button" class="open-hint-btn ghost" data-act="close">סגור</button>' +
       "</div>";
     const a = document.getElementById("open-app-cta");
-    if (a) {
-      setBuyHref(a, dest);
-    }
+    if (a) setBuyHref(a, dest);
     if (!bar._bound) {
       bar._bound = true;
       bar.addEventListener("click", function (e) {
@@ -227,26 +134,11 @@
       });
     }
   }
-  function armEscapeFallback(url) {
-    setTimeout(function () {
-      if (document.visibilityState === "visible" && isTrapInApp()) showEscapeBanner(url);
-    }, 1300);
-  }
   function launchAli(dest, fallback) {
     const start = dest || fallback;
     if (!start) return;
     if (isAndroid()) {
       window.location.href = aliIntent(start);
-      setTimeout(function () {
-        if (document.visibilityState === "visible") {
-          window.location.href = chromeIntent(start);
-        }
-      }, 900);
-      return;
-    }
-    if (isIOS() && isTrapInApp()) {
-      showEscapeBanner(start);
-      window.location.href = launchHref(start);
       return;
     }
     window.location.href = start;
@@ -276,15 +168,9 @@
     if (dest && btn) setBuyHref(btn, dest);
     const href = (btn && btn.getAttribute("href")) || "";
     if (dest && isLaunchHref(href)) {
-      armEscapeFallback(dest);
       return;
     }
     if (ev) ev.preventDefault();
-    if (isTrapInApp() && !dest) {
-      showEscapeBanner(url);
-      prefetchResolve(url, function (d) { if (d) showEscapeBanner(d); });
-      return;
-    }
     if (dest) {
       launchAli(dest, url);
       return;
@@ -300,36 +186,10 @@
       }
     });
   }
-  function maybeEscapeInApp() {
-    if (!isTrapInApp()) return;
-    showEscapeBanner();
-    try {
-      if (sessionStorage.getItem("pini_escape_tried") === "1") return;
-      sessionStorage.setItem("pini_escape_tried", "1");
-    } catch (e) {}
-    // Don't auto-navigate on localhost (tests / local preview).
-    const host = (location.hostname || "");
-    if (host === "127.0.0.1" || host === "localhost") return;
-    // Auto-try once. TikTok often ignores this without a tap; the banner is the reliable path.
-    const href = escapeHref(shopPageUrl());
-    if (isAndroid()) {
-      const fr = document.createElement("iframe");
-      fr.style.display = "none";
-      fr.src = href;
-      document.body.appendChild(fr);
-      setTimeout(function () { try { fr.remove(); } catch (e) {} }, 2000);
-    } else if (isIOS()) {
-      try { window.location.href = href; } catch (e) {}
-    }
-  }
   window.__piniLinks = {
     intentUrl: intentUrl,
     aliIntent: aliIntent,
-    chromeIntent: chromeIntent,
-    safariEscapeUrl: safariEscapeUrl,
-    instagramEscapeUrl: instagramEscapeUrl,
     launchHref: launchHref,
-    escapeHref: escapeHref,
     hasAffParams: hasAffParams,
     isTrapInApp: isTrapInApp,
     inAppName: inAppName,
@@ -1216,7 +1076,6 @@
     state.hot = (pair[1] && pair[1].products) || [];
     if (!state.videos.length && !state.hot.length) state.failed = true;
     draw();
-    maybeEscapeInApp();
     if (state.page === "home" && (state.query || "").trim().length >= 2) {
       startAliSearch(state.query);
     }

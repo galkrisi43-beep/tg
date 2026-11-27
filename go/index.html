@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F7EFE4">
+  <meta name="robots" content="noindex">
+  <title>החנות של פיני</title>
+  <style>
+    @font-face {
+      font-family: Assistant;
+      src: url("../shop/Assistant.ttf") format("truetype");
+      font-weight: 200 800;
+      font-display: swap;
+    }
+    :root {
+      --cream: #F7EFE4;
+      --paper: #FFF8F1;
+      --ink: #2A2118;
+      --muted: #8A7A6C;
+      --terra: #C45C26;
+      --terra-deep: #A24618;
+      --peach: #F3D2B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100dvh;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: Assistant, "Segoe UI", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 22px calc(32px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, #FFF8F1 0%, #F7EFE4 55%);
+    }
+    main {
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .logo {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--peach);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .line {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-bottom: 28px;
+    }
+    .go {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 56px;
+      padding: 14px 18px;
+      border-radius: 16px;
+      background: var(--terra);
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(196, 92, 38, .28);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .go:active { background: var(--terra-deep); }
+    .hint {
+      margin-top: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="../shop/img/pini.jpg" alt="פיני" width="92" height="92">
+    <h1>החנות של פיני</h1>
+    <p class="line">דילים מהסרטונים, במחיר בשקלים</p>
+    <a class="go" id="go" rel="noopener">לחצו כאן לפתיחת האתר 🛍️</a>
+    <p class="hint">נפתח בדפדפן שלכם, משם אפשר לקנות באפליקציה</p>
+  </main>
+  <script>
+  (function () {
+    var SHOP = "https://galkrisi43-beep.github.io/tg/shop/";
+    var API = "https://84-13-70-240.sslip.io";
+
+    function isTest() {
+      var q = new URLSearchParams(location.search);
+      if (q.get("ctest") === "1") {
+        try { localStorage.setItem("pini_ctest", "1"); } catch (e) {}
+      }
+      try { return localStorage.getItem("pini_ctest") === "1"; } catch (e) { return false; }
+    }
+
+    function shopUrl() {
+      var u = new URL(SHOP);
+      if (isTest()) u.searchParams.set("ctest", "1");
+      return u.toString();
+    }
+
+    function isAndroid() { return /Android/i.test(navigator.userAgent || ""); }
+    function isIOS() { return /iPhone|iPad|iPod/i.test(navigator.userAgent || ""); }
+    function inAppName() {
+      var ua = navigator.userAgent || "";
+      if (/BytedanceWebview|TikTok|musical_ly/i.test(ua)) return "tiktok";
+      if (/Barcelona/i.test(ua)) return "threads";
+      if (/Instagram/i.test(ua)) return "instagram";
+      if (/FBAN|FBAV|FB_IAB/i.test(ua)) return "facebook";
+      return "";
+    }
+    function isTrapInApp() {
+      var ua = navigator.userAgent || "";
+      return !!inAppName()
+        || /Line\/|Snapchat|Twitter|Pinterest|MicroMessenger/i.test(ua)
+        || (/Android/i.test(ua) && /; wv\)/.test(ua));
+    }
+
+    function chromeIntent(url) {
+      var path = String(url || "").replace(/^https?:\/\//i, "");
+      return "intent://" + path + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
+        encodeURIComponent(url) + ";end";
+    }
+    function safariEscape(url) {
+      return String(url || "").replace(/^https:\/\//i, "x-safari-https://").replace(/^http:\/\//i, "x-safari-http://");
+    }
+    function buttonHref(url) {
+      if (isAndroid()) return chromeIntent(url);
+      if (isIOS()) return safariEscape(url);
+      return url;
+    }
+
+    function source() {
+      var ua = (navigator.userAgent || "").toLowerCase();
+      var q = new URLSearchParams(location.search);
+      if (q.get("utm_source") === "tiktok" || q.get("from") === "tt" || inAppName() === "tiktok" || /tiktok|musical_ly/.test(ua)) return "tiktok";
+      if (inAppName() === "instagram" || /instagram/.test(ua)) return "instagram";
+      if (inAppName() === "facebook") return "facebook";
+      return "direct";
+    }
+    function device() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "") ? "mobile" : "desktop";
+    }
+    function inapp() { return inAppName() || "none"; }
+
+    function track(ev) {
+      if (isTest()) return;
+      var payload = Object.assign({
+        ts: Math.floor(Date.now() / 1000),
+        source: source(),
+        device: device(),
+        inapp: inapp(),
+        page: "landing"
+      }, ev);
+      try {
+        fetch(API + "/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ events: [payload] }),
+          credentials: "include",
+          keepalive: true
+        }).catch(function () {});
+      } catch (e) {}
+    }
+
+    var dest = shopUrl();
+    var btn = document.getElementById("go");
+    var trapped = isTrapInApp();
+    document.body.setAttribute("data-mode", trapped ? "inapp" : "browser");
+
+    if (!trapped) {
+      if (btn) btn.setAttribute("href", dest);
+      track({ kind: "page" });
+      location.replace(dest);
+      return;
+    }
+
+    if (btn) {
+      btn.setAttribute("href", buttonHref(dest));
+      btn.addEventListener("click", function () {
+        track({ kind: "cta" });
+        if (!isIOS()) return;
+        setTimeout(function () {
+          if (document.visibilityState === "visible") location.href = dest;
+        }, 1400);
+      });
+    }
+    track({ kind: "page" });
+  })();
+  </script>
+</body>
+</html>
