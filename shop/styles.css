@@ -221,3 +221,37 @@ img { display: block; max-width: 100%; }
 .sorts { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
 .photo-preview { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-weight: 600; }
 .photo-preview img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; }
+
+.groups {
+  margin: 28px 2px 4px;
+  padding: 18px 4px 6px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.groups p {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+.groups-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.groups a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.85);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.groups a svg { width: 15px; height: 15px; flex: 0 0 auto; }

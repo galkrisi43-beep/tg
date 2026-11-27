@@ -490,6 +490,22 @@
     }
     return html;
   }
+
+  function groupsFooter() {
+    const wa = "https://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM";
+    const ch = "https://t.me/pinideals";
+    const gr = "https://t.me/pinitheraccoon";
+    const icoWa = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2c-5.5 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.92L2 22l5.25-1.38A9.96 9.96 0 0 0 12.04 22c5.52 0 10-4.48 10-10s-4.48-10-9.99-10zm0 18.2c-1.64 0-3.22-.44-4.6-1.26l-.33-.2-3.11.82.83-3.04-.22-.35A8.16 8.16 0 0 1 3.84 12c0-4.52 3.68-8.2 8.2-8.2 4.52 0 8.2 3.68 8.2 8.2 0 4.52-3.68 8.2-8.2 8.2zm4.5-6.14c-.25-.12-1.46-.72-1.68-.8-.23-.08-.4-.12-.56.12-.17.25-.64.8-.79.96-.15.17-.29.19-.54.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.23-1.45-1.37-1.7-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.15.17-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.42h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07 0 1.22.9 2.4 1.02 2.56.12.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.46-.6 1.67-1.17.21-.58.21-1.07.15-1.17-.06-.1-.23-.16-.48-.29z"/></svg>';
+    const icoTg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.5 4.3 18.9 20c-.2.9-.7 1.1-1.5.7l-4.1-3-2 1.9c-.2.2-.4.4-.8.4l.3-4.3 7.8-7c.3-.3-.1-.5-.5-.2l-9.6 6-4.1-1.3c-.9-.3-.9-.9.2-1.3l16-6.2c.8-.3 1.4.2 1.2 1.2z"/></svg>';
+    return '<div class="groups">' +
+      '<p>רוצים דילים ישר לטלפון? הצטרפו לקבוצות</p>' +
+      '<div class="groups-row">' +
+        '<a href="' + wa + '" target="_blank" rel="noopener">'+ icoWa + 'וואטסאפ</a>' +
+        '<a href="' + ch + '" target="_blank" rel="noopener">'+ icoTg + 'ערוץ טלגרם</a>' +
+        '<a href="' + gr + '" target="_blank" rel="noopener">'+ icoTg + 'קבוצת טלגרם</a>' +
+      "</div></div>";
+  }
+
   function header(home) {
     if (home) {
       return '<div class="top"><img src="img/pini.jpg" alt="פיני"><div>' +
@@ -608,6 +624,7 @@
     html += searchBar("מה אתם מחפשים?", { photo: true, help: true });
     html += priceChips();
     html += '<div id="results">' + resultsHome() + "</div>";
+    html += groupsFooter();
     return html;
   }
 
@@ -616,6 +633,7 @@
     html += searchBar("חיפוש במוצרים מהסרטונים…");
     html += priceChips();
     html += '<div id="results">' + resultsVideos() + "</div>";
+    html += groupsFooter();
     return html;
   }
 
@@ -626,6 +644,7 @@
     html += catRow(state.cat);
     html += priceChips();
     html += '<div id="results">' + resultsCat() + "</div>";
+    html += groupsFooter();
     return html;
   }
 
