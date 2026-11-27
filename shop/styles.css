@@ -358,3 +358,21 @@ img { display: block; max-width: 100%; }
   color: var(--muted);
 }
 .groups a svg { width: 15px; height: 15px; flex: 0 0 auto; }
+
+.open-hint {
+  position: fixed; right: 12px; left: 12px; bottom: 16px; z-index: 40;
+  background: #fff; border: 1px solid #eadccb; border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(80,40,10,.12);
+  padding: 14px 14px 12px; text-align: center;
+}
+.open-hint p {
+  margin: 0 0 10px; font-size: 13px; font-weight: 600; line-height: 1.45; color: var(--ink);
+}
+.open-hint-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.open-hint-btn {
+  height: 40px; padding: 0 14px; border-radius: 12px; border: 0;
+  background: var(--terra); color: #fff; font-weight: 800; font-size: 13px;
+}
+.open-hint-btn.ghost {
+  background: #fff; color: var(--terra-deep); border: 1px solid #eadccb;
+}

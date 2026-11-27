@@ -37,12 +37,89 @@
   function isAffiliate(url) {
     return typeof url === "string" && url.indexOf("s.click.aliexpress.com") !== -1;
   }
+  function isAndroid() { return /Android/i.test(navigator.userAgent || ""); }
+  function isIOS() { return /iPhone|iPad|iPod/i.test(navigator.userAgent || ""); }
+  function isInAppBrowser() {
+    const ua = navigator.userAgent || "";
+    return /BytedanceWebview|TikTok|musical_ly|Instagram|FBAN|FBAV|FB_IAB|Line\/|Snapchat|Twitter|Pinterest|MicroMessenger|WhatsApp|Telegram/i.test(ua)
+      || (/Android/i.test(ua) && /; wv\)/.test(ua));
+  }
+  function intentUrl(url, packageName) {
+    const path = String(url || "").replace(/^https?:\/\//i, "");
+    return "intent://" + path + "#Intent;scheme=https;package=" + packageName +
+      ";S.browser_fallback_url=" + encodeURIComponent(url) + ";end";
+  }
+  function showOpenHint(url) {
+    let bar = document.getElementById("open-hint");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "open-hint";
+      bar.className = "open-hint";
+      bar.innerHTML = '<p>לפתיחה באפליקציית אלי אקספרס, פתחו את הקישור ב-Safari או בכרטיסייה חיצונית.</p>' +
+        '<div class="open-hint-row">' +
+        '<button type="button" class="open-hint-btn" data-act="copy">העתיקו קישור</button>' +
+        '<button type="button" class="open-hint-btn ghost" data-act="close">סגור</button>' +
+        "</div>";
+      document.body.appendChild(bar);
+      bar.addEventListener("click", function (e) {
+        const act = (e.target && e.target.getAttribute && e.target.getAttribute("data-act")) || "";
+        if (act === "close") bar.hidden = true;
+        if (act === "copy") {
+          const link = bar.getAttribute("data-url") || "";
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).catch(function () {});
+          }
+        }
+      });
+    }
+    bar.setAttribute("data-url", url);
+    bar.hidden = false;
+  }
+  function launchAli(dest, fallback) {
+    const start = dest || fallback;
+    if (isAndroid()) {
+      window.location.href = intentUrl(start, "com.alibaba.aliexpresshd");
+      setTimeout(function () {
+        if (document.visibilityState === "visible") {
+          window.location.href = intentUrl(fallback || start, "com.android.chrome");
+        }
+      }, 900);
+      return;
+    }
+    if (isIOS() && isInAppBrowser()) {
+      showOpenHint(fallback || start);
+      window.location.href = "x-safari-" + (fallback || start);
+      return;
+    }
+    window.open(start, "_blank", "noopener");
+  }
   function openBuy(url, ev) {
     if (ev) ev.preventDefault();
     if (!isAffiliate(url)) return;
     const tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && typeof tg.openLink === "function") tg.openLink(url);
-    else window.open(url, "_blank", "noopener");
+    const finish = function (dest) { launchAli(dest || url, url); };
+    // Resolve s.click first so the app opens on a URL that already has affiliate params.
+    const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) {} }, 2500);
+    const opts = { headers: { Accept: "application/json" } };
+    if (ctl) opts.signal = ctl.signal;
+    fetch(API_BASE + "/resolve?url=" + encodeURIComponent(url), opts)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        clearTimeout(timer);
+        const dest = (d && d.ok && d.aff && d.final) ? d.final : url;
+        if (tg && typeof tg.openLink === "function") {
+          try { tg.openLink(dest, { try_instant_view: false }); return; } catch (e) {}
+        }
+        finish(dest);
+      })
+      .catch(function () {
+        clearTimeout(timer);
+        if (tg && typeof tg.openLink === "function") {
+          try { tg.openLink(url, { try_instant_view: false }); return; } catch (e) {}
+        }
+        finish(url);
+      });
   }
   const API_BASE = "https://84-13-70-240.sslip.io";
   const SUGGESTS = ["מנורת שקיעה", "מעמד לטלפון לרכב", "אוזניות", "בקבוק מים"];
