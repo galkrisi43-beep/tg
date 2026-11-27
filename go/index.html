@@ -66,9 +66,41 @@
       -webkit-tap-highlight-color: transparent;
     }
     .go:active { background: var(--terra-deep); }
+    .tt-guide {
+      display: none;
+      position: fixed;
+      top: max(8px, env(safe-area-inset-top));
+      right: 14px;
+      left: auto;
+      z-index: 20;
+      text-align: right;
+      pointer-events: none;
+      max-width: 210px;
+    }
+    body[data-mode="inapp"] .tt-guide { display: block; }
+    .tt-guide .arrow {
+      font-size: 30px;
+      line-height: 1;
+      color: var(--terra);
+      margin-bottom: 4px;
+    }
+    .tt-guide p {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.35;
+      background: rgba(255, 248, 241, .92);
+      border-radius: 12px;
+      padding: 7px 10px;
+    }
   </style>
 </head>
 <body>
+  <div class="tt-guide" id="tt-guide" hidden>
+    <div class="arrow" aria-hidden="true">↗</div>
+    <p>לחצו על ⋯ ואז ״פתיחה בדפדפן״</p>
+  </div>
   <main>
     <img class="logo" src="../shop/img/pini.jpg" alt="פיני" width="112" height="112">
     <a class="go" id="go" rel="noopener">לחצו כאן לפתיחת האתר 🛍️</a>
@@ -160,6 +192,8 @@
     var btn = document.getElementById("go");
     var trapped = isTrapInApp();
     document.body.setAttribute("data-mode", trapped ? "inapp" : "browser");
+    var guide = document.getElementById("tt-guide");
+    if (guide && trapped) guide.hidden = false;
 
     if (!trapped) {
       if (btn) btn.setAttribute("href", dest);
