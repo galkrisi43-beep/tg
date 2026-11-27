@@ -25,7 +25,7 @@
   };
 
   const root = document.getElementById("app");
-  const state = { videos: [], hot: [], query: "", price: 0, page: "home", cat: null, failed: false };
+  const state = { videos: [], hot: [], query: "", price: 0, page: "home", cat: null, failed: false, sort: "", aliStatus: "idle", aliProducts: [], aliReply: "", aliKind: "" };
 
   function ils(n) {
     if (n == null || n === "") return "";
@@ -44,30 +44,32 @@
     if (tg && typeof tg.openLink === "function") tg.openLink(url);
     else window.open(url, "_blank", "noopener");
   }
-  const BOT_URL = "https://t.me/Pinizolbot";
   const API_BASE = "https://84-13-70-240.sslip.io";
-  function openBot(ev) {
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && typeof tg.openTelegramLink === "function") {
-      if (ev) ev.preventDefault();
-      tg.openTelegramLink(BOT_URL);
-    }
-    // otherwise the href opens Telegram in a normal browser
+  const SUGGESTS = ["מנורת שקיעה", "מעמד לטלפון לרכב", "אוזניות", "בקבוק מים"];
+  const PLACEHOLDER = "img/placeholder.svg";
+  function isAliUrl(s) {
+    return /aliexpress\.|s\.click\.aliexpress|a\.aliexpress/i.test(s || "");
   }
-  function botCta(kind) {
-    if (kind === "fallback") {
-      return '<a class="bot-fallback" href="' + BOT_URL + '" data-bot="1">לא מצאתם? פיני יחפש לכם בכל אלי 🦝</a>';
+  function thumbUrl(url) {
+    let u = String(url || "").trim();
+    if (!u) return PLACEHOLDER;
+    if (u.indexOf("//") === 0) u = "https:" + u;
+    if (u.indexOf("http://") === 0) u = "https://" + u.slice(7);
+    if (/aliexpress-media\.com|ae-pic-|alicdn\.com/.test(u) && u.indexOf("_220x220") === -1 && u.indexOf("_350x350") === -1) {
+      u = u.replace(/(\.(?:jpe?g|png|webp))(?:\?.*)?$/i, "$1_220x220.jpg");
     }
-    if (kind === "secondary") {
-      return '<a class="botcta botcta-sec" href="' + BOT_URL + '" data-bot="1">' +
-        '<div class="botcta-title">או חפשו אצל פיני בטלגרם 🦝</div>' +
-        '<div class="botcta-sub">מי שיש לו טלגרם יכול לחפש גם בבוט</div>' +
-      "</a>";
-    }
-    return '<a class="botcta" href="' + BOT_URL + '" data-bot="1">' +
-      '<div class="botcta-title">🔎 פיני יחפש לכם בכל אלי</div>' +
-      '<div class="botcta-sub">כתבו מה שאתם מחפשים — בחינם</div>' +
-    "</a>";
+    return u;
+  }
+  function imgTag(src, alt, cls) {
+    const url = thumbUrl(src);
+    return '<img class="' + (cls || "") + '" src="' + esc(url) + '" alt="' + esc(alt || "") +
+      '" referrerpolicy="no-referrer" decoding="async" loading="lazy" onerror="this.onerror=null;this.src=\'' + PLACEHOLDER + '\';">';
+  }
+  function suggestions() {
+    return '<div class="suggest"><div class="suggest-label">נסו למשל</div>' +
+      SUGGESTS.map(function (s) {
+        return '<button type="button" class="chip" data-q="' + esc(s) + '">' + esc(s) + "</button>";
+      }).join("") + "</div>";
   }
 
   function esc(s) {
@@ -76,7 +78,7 @@
       .replace(/"/g, "&quot;");
   }
 
-  function card(p) {
+  function card(p, opts) {
     if (!p || !isAffiliate(p.link)) return "";
     const disc = p.discount && p.discount >= 8
       ? '<div class="badge" dir="ltr">-' + p.discount + "%</div>"
@@ -92,13 +94,14 @@
     }
     return (
       '<article class="card">' +
-        '<div class="pic"><img src="' + esc(p.image) + '" alt="' + esc(p.title) + '">' + disc + "</div>" +
+        '<div class="pic">' + imgTag(p.image, p.title) + disc + "</div>" +
         '<div class="meta">' +
           '<div class="name">' + esc(p.title) + "</div>" +
           (p.desc ? '<div class="desc">' + esc(p.desc) + "</div>" : "") +
           '<div class="price"><span class="now">' + ils(p.price) + "</span>" + was + "</div>" +
           stats +
           '<button type="button" class="buy" data-link="' + esc(p.link) + '">לרכישה</button>' +
+          (opts && opts.similar && p.id ? '<button type="button" class="more" data-similar="' + esc(p.id) + '">עוד כאלה</button>' : "") +
         "</div>" +
       "</article>"
     );
@@ -141,9 +144,6 @@
     el.querySelectorAll("[data-link]").forEach(function (btn) {
       btn.addEventListener("click", function (e) { openBuy(btn.getAttribute("data-link"), e); });
     });
-    el.querySelectorAll("[data-bot]").forEach(function (a) {
-      a.addEventListener("click", openBot);
-    });
     el.querySelectorAll("[data-go]").forEach(function (a) {
       a.addEventListener("click", function (e) {
         const go = a.getAttribute("data-go");
@@ -160,15 +160,13 @@
         drawResults();
       });
     });
+    bindExtras(el);
   }
 
   function bindResults(el) {
     if (!el) return;
     el.querySelectorAll("[data-link]").forEach(function (btn) {
       btn.addEventListener("click", function (e) { openBuy(btn.getAttribute("data-link"), e); });
-    });
-    el.querySelectorAll("[data-bot]").forEach(function (a) {
-      a.addEventListener("click", openBot);
     });
     el.querySelectorAll("[data-go]").forEach(function (a) {
       a.addEventListener("click", function (e) {
@@ -178,6 +176,40 @@
         else if (go.indexOf("cat:") === 0) { e.preventDefault(); nav("cat", { cat: go.slice(4) }); }
       });
     });
+    bindExtras(el);
+  }
+
+  function bindExtras(el) {
+    if (!el) return;
+    el.querySelectorAll("[data-q]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const q = b.getAttribute("data-q") || "";
+        const inp = document.getElementById("q");
+        if (inp) inp.value = q;
+        state.sort = "";
+        applyQuery(q, { fromTyping: false });
+      });
+    });
+    el.querySelectorAll("[data-sort]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        state.sort = b.getAttribute("data-sort") || "";
+        startAliSearch(state.query);
+      });
+    });
+    el.querySelectorAll("[data-similar]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const id = b.getAttribute("data-similar");
+        if (id) startSimilar(id);
+      });
+    });
+    const file = el.querySelector("#photo");
+    if (file && file.getAttribute("data-bound") !== "1") {
+      file.setAttribute("data-bound", "1");
+      file.addEventListener("change", function () {
+        if (file.files && file.files[0]) startPhoto(file.files[0]);
+        file.value = "";
+      });
+    }
   }
 
   var searchTimer = null;
@@ -215,6 +247,7 @@
   function applyQuery(value, opts) {
     opts = opts || {};
     state.query = (value || "").trim();
+    state.sort = opts.keepSort ? state.sort : "";
     const url = urlFor(state.page, { cat: state.cat, query: state.query });
     history.replaceState({ page: state.page, cat: state.cat, query: state.query }, "", url);
     if (state.page === "home") {
@@ -222,6 +255,24 @@
       return;
     }
     drawResults();
+  }
+
+  var aliAbort = null;
+  var aliSeq = 0;
+  var progressTimer = null;
+
+  function setProgress(seq) {
+    var step = 0;
+    if (progressTimer) clearInterval(progressTimer);
+    progressTimer = setInterval(function () {
+      if (seq !== aliSeq) { clearInterval(progressTimer); return; }
+      step += 1;
+      const box = document.getElementById("results");
+      if (!box || state.aliStatus !== "loading") { clearInterval(progressTimer); return; }
+      const msgs = ["מחפש בכל אלי אקספרס…", "עוד רגע, פיני בודק מחירים בשקלים…", "מסנן מוצרים איכותיים…"];
+      const empty = box.querySelector(".empty.loading");
+      if (empty) empty.textContent = msgs[Math.min(step, msgs.length - 1)];
+    }, 3500);
   }
 
   function startAliSearch(q) {
@@ -233,17 +284,28 @@
     if (q.length < 2) {
       state.aliStatus = "idle";
       state.aliProducts = [];
+      state.aliReply = "";
+      state.aliKind = "";
       drawResults();
       return;
     }
     const seq = ++aliSeq;
     state.aliStatus = "loading";
     state.aliProducts = [];
+    state.aliReply = "";
     drawResults();
+    setProgress(seq);
     const ctl = new AbortController();
     aliAbort = ctl;
     const timer = setTimeout(function () { try { ctl.abort(); } catch (e) {} }, 50000);
-    fetch(API_BASE + "/search?q=" + encodeURIComponent(q), {
+    let path;
+    if (isAliUrl(q)) {
+      path = "/link?url=" + encodeURIComponent(q);
+    } else {
+      path = "/search?q=" + encodeURIComponent(q);
+      if (state.sort) path += "&sort=" + encodeURIComponent(state.sort);
+    }
+    fetch(API_BASE + path, {
       signal: ctl.signal,
       cache: "no-store",
       headers: { "Accept": "application/json" },
@@ -255,9 +317,17 @@
       .then(function (pack) {
         if (seq !== aliSeq) return;
         const data = pack.data || {};
-        if (!data.ok) {
-          state.aliStatus = pack.status === 429 ? "rate" : "error";
+        if (data.ok === false && pack.status === 429) {
+          state.aliStatus = "rate";
           state.aliProducts = [];
+          state.aliReply = "";
+          drawResults();
+          return;
+        }
+        if (data.ok === false && !(data.products || []).length) {
+          state.aliStatus = (data.error === "not_found" || data.error === "bad_link" || data.error === "not_a_product_link") ? "empty" : "error";
+          state.aliProducts = [];
+          state.aliReply = "";
           drawResults();
           return;
         }
@@ -265,16 +335,120 @@
           return p && isAffiliate(p.link);
         });
         state.aliProducts = list;
-        state.aliStatus = list.length ? "ok" : "empty";
+        state.aliReply = data.reply || "";
+        state.aliKind = data.kind || "search";
+        if (data.kind === "offtopic") state.aliStatus = "advice";
+        else state.aliStatus = list.length ? "ok" : "empty";
         drawResults();
       })
       .catch(function () {
         if (seq !== aliSeq) return;
         state.aliStatus = "error";
         state.aliProducts = [];
+        state.aliReply = "";
         drawResults();
       })
-      .then(function () { clearTimeout(timer); }, function () { clearTimeout(timer); });
+      .then(function () { clearTimeout(timer); if (progressTimer) clearInterval(progressTimer); },
+            function () { clearTimeout(timer); if (progressTimer) clearInterval(progressTimer); });
+  }
+
+  function startSimilar(id) {
+    const seq = ++aliSeq;
+    if (aliAbort) { try { aliAbort.abort(); } catch (e) {} }
+    state.aliStatus = "loading";
+    state.aliReply = "";
+    drawResults();
+    setProgress(seq);
+    const have = (state.aliProducts || []).map(function (p) { return p.id; }).filter(Boolean);
+    fetch(API_BASE + "/similar?id=" + encodeURIComponent(id) + (have.length ? "&exclude=" + encodeURIComponent(have.join(",")) : ""), {
+      cache: "no-store",
+      headers: { "Accept": "application/json" },
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (seq !== aliSeq) return;
+        const list = ((data && data.products) || []).filter(function (p) { return p && isAffiliate(p.link); });
+        state.aliProducts = list;
+        state.aliKind = "similar";
+        state.aliReply = list.length ? "עוד מוצרים בסגנון הזה:" : "";
+        state.aliStatus = list.length ? "ok" : "empty";
+        drawResults();
+      })
+      .catch(function () {
+        if (seq !== aliSeq) return;
+        state.aliStatus = "error";
+        drawResults();
+      })
+      .then(function () { if (progressTimer) clearInterval(progressTimer); });
+  }
+
+  function startPhoto(file) {
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      state.aliStatus = "error";
+      state.aliReply = "התמונה כבדה מדי. נסו צילום עד 5MB.";
+      state.aliProducts = [];
+      drawResults();
+      return;
+    }
+    const seq = ++aliSeq;
+    state.aliStatus = "loading";
+    state.aliReply = "";
+    state.query = "";
+    const inp = document.getElementById("q");
+    if (inp) inp.value = "";
+    drawResults();
+    setProgress(seq);
+    resizeImage(file).then(function (dataUrl) {
+      if (seq !== aliSeq) return;
+      return fetch(API_BASE + "/photo", {
+        method: "POST",
+        cache: "no-store",
+        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl, mime: "image/jpeg" }),
+      }).then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data || {} }; }); });
+    }).then(function (pack) {
+      if (seq !== aliSeq || !pack) return;
+      const data = pack.data || {};
+      const list = (data.products || []).filter(function (p) { return p && isAffiliate(p.link); });
+      state.aliProducts = list;
+      state.aliReply = data.reply || data.understood || "";
+      state.aliKind = "photo";
+      state.aliStatus = list.length ? "ok" : (data.reply ? "advice" : "empty");
+      drawResults();
+    }).catch(function () {
+      if (seq !== aliSeq) return;
+      state.aliStatus = "error";
+      state.aliReply = "לא הצלחתי לקרוא את התמונה. נסו צילום חד יותר, או כתבו מה אתם מחפשים.";
+      drawResults();
+    }).then(function () { if (progressTimer) clearInterval(progressTimer); });
+  }
+
+  function resizeImage(file) {
+    return new Promise(function (resolve, reject) {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = function () {
+        const max = 1280;
+        let w = img.width, h = img.height;
+        if (Math.max(w, h) > max) {
+          const s = max / Math.max(w, h);
+          w = Math.round(w * s);
+          h = Math.round(h * s);
+        }
+        const c = document.createElement("canvas");
+        c.width = w;
+        c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("bad image"));
+      };
+      img.src = url;
+    });
   }
 
   function syncChips() {
@@ -300,10 +474,21 @@
         ICONS[c.svg] + "</div><label>" + esc(c.name) + "</label></button>";
     }).join("") + "</div>";
   }
-  function searchBar(placeholder) {
-    return '<div class="search">' + ICONS.search +
+  function searchBar(placeholder, opts) {
+    opts = opts || {};
+    let html = '<div class="search">' + ICONS.search +
       '<input id="q" type="search" enterkeyhint="search" placeholder="' + esc(placeholder || "מה אתם מחפשים?") +
-      '" value="' + esc(state.query) + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>';
+      '" value="' + esc(state.query) + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">';
+    if (opts.photo) {
+      html += '<div class="tools"><label class="iconbtn" for="photo" title="חיפוש לפי תמונה" aria-label="חיפוש לפי תמונה">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7.5h3l1.2-2h7.6L17 7.5h3A1.5 1.5 0 0 1 21.5 9v9A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="13.2" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg>' +
+        '</label><input id="photo" type="file" accept="image/*" capture="environment" hidden></div>';
+    }
+    html += "</div>";
+    if (opts.help) {
+      html += '<div class="search-help">כתבו מה אתם מחפשים, הדביקו קישור מאלי, או צלמו מוצר. אפשר גם תקציב, למשל «מנורה עד 50».</div>';
+    }
+    return html;
   }
   function header(home) {
     if (home) {
@@ -324,30 +509,45 @@
     return '<div class="grid">' + vis.map(card).join("") + "</div>";
   }
 
+  function sortChips() {
+    const opts = [["", "רלוונטי"], ["price", "הכי זול"], ["orders", "הכי נמכר"], ["rate", "הכי מדורג"]];
+    return '<div class="sorts">' + opts.map(function (o) {
+      return '<button type="button" class="chip' + ((state.sort || "") === o[0] ? " on" : "") +
+        '" data-sort="' + o[0] + '">' + o[1] + "</button>";
+    }).join("") + "</div>";
+  }
+
   function resultsHome() {
     const q = (state.query || "").trim();
-    if (q.length >= 2) {
+    const searching = q.length >= 2 || state.aliKind === "photo" || state.aliKind === "similar" || state.aliStatus === "loading";
+    if (searching) {
       if (state.aliStatus === "loading") {
-        return '<div class="empty">מחפש בכל אלי אקספרס…</div>';
+        return '<div class="empty loading">מחפש בכל אלי אקספרס…</div>';
       }
       if (state.aliStatus === "error") {
-        return '<div class="empty">החיפוש באתר לא הצליח כרגע.</div>' + botCta("fallback");
+        return '<div class="empty">' + esc(state.aliReply || "החיפוש באתר לא הצליח כרגע. נסו שוב בעוד רגע.") + "</div>" + suggestions();
       }
       if (state.aliStatus === "rate") {
-        return '<div class="empty">יותר מדי חיפושים ברגע זה. נסו שוב בעוד רגע, או חפשו בבוט.</div>' + botCta("fallback");
+        return '<div class="empty">יותר מדי חיפושים ברגע זה. נסו שוב בעוד רגע.</div>' + suggestions();
       }
+      const reply = state.aliReply ? '<div class="reply">' + esc(state.aliReply) + "</div>" : "";
       const vis = (state.aliProducts || []).filter(function (p) {
         return isAffiliate(p.link) && underPrice(p);
       });
+      if (state.aliStatus === "advice" && !vis.length) {
+        return reply + suggestions();
+      }
       if (!vis.length) {
         if (state.price) {
           return '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
             '<div class="empty">אין תוצאות במחיר הזה. נסו טווח אחר.</div>';
         }
-        return '<div class="empty">לא מצאנו מוצרים לחיפוש הזה.</div>' + botCta("fallback");
+        return reply + '<div class="empty">לא מצאנו מוצרים לחיפוש הזה. נסו מילה אחרת, או בחרו אחת מההצעות.</div>' + suggestions();
       }
-      return '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
-        '<div class="grid">' + vis.map(card).join("") + "</div>";
+      const title = state.aliKind === "similar" ? "עוד כאלה" : (state.aliKind === "photo" ? "מוצרים דומים לתמונה" : "תוצאות חיפוש");
+      return reply + '<div class="sec"><h2>' + title + "</h2></div>" +
+        (state.aliKind === "photo" || state.aliKind === "similar" || isAliUrl(q) ? "" : sortChips()) +
+        '<div class="grid">' + vis.map(function (p) { return card(p, { similar: true }); }).join("") + "</div>";
     }
     let html = '<div class="sec"><h2>דילים חמים</h2></div>';
     html += gridOrEmpty((state.hot || []), '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
@@ -373,9 +573,8 @@
       html += '<div class="grid">' + items.map(card).join("") + "</div></section>";
     });
     if (!shown) {
-      html += '<div class="empty">לא מצאנו את זה בסרטונים.</div>' +
-        botCta("fallback") +
-        '<div class="empty"><a href="index.html" data-go="home">חזרה לחנות</a></div>';
+      html += '<div class="empty">לא מצאנו את זה בסרטונים. נסו מילה אחרת, או חפשו בכל אלי בדף הבית.</div>' +
+        '<div class="empty"><a href="index.html" data-go="home">לחפש בכל אלי בחנות</a></div>';
     }
     return html;
   }
@@ -406,8 +605,7 @@
       '<div class="sub">כל המוצרים מהטיקטוק, לפי סרטון. מהחדש לישן.</div>' +
       '<div class="go">לכל המוצרים מהסרטונים ←</div>' +
     "</a>";
-    html += searchBar("מה אתם מחפשים?");
-    html += botCta("secondary");
+    html += searchBar("מה אתם מחפשים?", { photo: true, help: true });
     html += priceChips();
     html += '<div id="results">' + resultsHome() + "</div>";
     return html;
@@ -444,7 +642,7 @@
   function draw() {
     if (state.failed && !state.videos.length && !state.hot.length) {
       root.innerHTML = header(true) +
-        '<div class="err">משהו השתבש בטעינת המוצרים. אפשר לחזור לבוט ולחפש שם כרגיל — החנות לא משפיעה עליו.</div>';
+        '<div class="err">משהו השתבש בטעינת המוצרים. רעננו את העמוד, או חפשו למעלה בכל אלי.</div>';
       return;
     }
     let html = "";
