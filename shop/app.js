@@ -45,6 +45,7 @@
     else window.open(url, "_blank", "noopener");
   }
   const BOT_URL = "https://t.me/Pinizolbot";
+  const API_BASE = "https://84-13-70-240.sslip.io";
   function openBot(ev) {
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg && typeof tg.openTelegramLink === "function") {
@@ -56,6 +57,12 @@
   function botCta(kind) {
     if (kind === "fallback") {
       return '<a class="bot-fallback" href="' + BOT_URL + '" data-bot="1">לא מצאתם? פיני יחפש לכם בכל אלי 🦝</a>';
+    }
+    if (kind === "secondary") {
+      return '<a class="botcta botcta-sec" href="' + BOT_URL + '" data-bot="1">' +
+        '<div class="botcta-title">או חפשו אצל פיני בטלגרם 🦝</div>' +
+        '<div class="botcta-sub">מי שיש לו טלגרם יכול לחפש גם בבוט</div>' +
+      "</a>";
     }
     return '<a class="botcta" href="' + BOT_URL + '" data-bot="1">' +
       '<div class="botcta-title">🔎 פיני יחפש לכם בכל אלי</div>' +
@@ -184,7 +191,7 @@
       clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
         applyQuery(inp.value, { fromTyping: true });
-      }, 200);
+      }, state.page === "home" ? 500 : 200);
     });
     function submit() {
       clearTimeout(searchTimer);
@@ -202,12 +209,72 @@
     });
   }
 
+  var aliAbort = null;
+  var aliSeq = 0;
+
   function applyQuery(value, opts) {
     opts = opts || {};
     state.query = (value || "").trim();
     const url = urlFor(state.page, { cat: state.cat, query: state.query });
     history.replaceState({ page: state.page, cat: state.cat, query: state.query }, "", url);
+    if (state.page === "home") {
+      startAliSearch(state.query);
+      return;
+    }
     drawResults();
+  }
+
+  function startAliSearch(q) {
+    if (aliAbort) {
+      try { aliAbort.abort(); } catch (e) {}
+      aliAbort = null;
+    }
+    q = (q || "").trim();
+    if (q.length < 2) {
+      state.aliStatus = "idle";
+      state.aliProducts = [];
+      drawResults();
+      return;
+    }
+    const seq = ++aliSeq;
+    state.aliStatus = "loading";
+    state.aliProducts = [];
+    drawResults();
+    const ctl = new AbortController();
+    aliAbort = ctl;
+    const timer = setTimeout(function () { try { ctl.abort(); } catch (e) {} }, 50000);
+    fetch(API_BASE + "/search?q=" + encodeURIComponent(q), {
+      signal: ctl.signal,
+      cache: "no-store",
+      headers: { "Accept": "application/json" },
+    })
+      .then(function (r) {
+        return r.json().then(function (data) { return { status: r.status, data: data || {} }; })
+          .catch(function () { return { status: r.status, data: {} }; });
+      })
+      .then(function (pack) {
+        if (seq !== aliSeq) return;
+        const data = pack.data || {};
+        if (!data.ok) {
+          state.aliStatus = pack.status === 429 ? "rate" : "error";
+          state.aliProducts = [];
+          drawResults();
+          return;
+        }
+        const list = (data.products || []).filter(function (p) {
+          return p && isAffiliate(p.link);
+        });
+        state.aliProducts = list;
+        state.aliStatus = list.length ? "ok" : "empty";
+        drawResults();
+      })
+      .catch(function () {
+        if (seq !== aliSeq) return;
+        state.aliStatus = "error";
+        state.aliProducts = [];
+        drawResults();
+      })
+      .then(function () { clearTimeout(timer); }, function () { clearTimeout(timer); });
   }
 
   function syncChips() {
@@ -258,7 +325,32 @@
   }
 
   function resultsHome() {
-    let html = gridOrEmpty((state.hot || []), '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
+    const q = (state.query || "").trim();
+    if (q.length >= 2) {
+      if (state.aliStatus === "loading") {
+        return '<div class="empty">מחפש בכל אלי אקספרס…</div>';
+      }
+      if (state.aliStatus === "error") {
+        return '<div class="empty">החיפוש באתר לא הצליח כרגע.</div>' + botCta("fallback");
+      }
+      if (state.aliStatus === "rate") {
+        return '<div class="empty">יותר מדי חיפושים ברגע זה. נסו שוב בעוד רגע, או חפשו בבוט.</div>' + botCta("fallback");
+      }
+      const vis = (state.aliProducts || []).filter(function (p) {
+        return isAffiliate(p.link) && underPrice(p);
+      });
+      if (!vis.length) {
+        if (state.price) {
+          return '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
+            '<div class="empty">אין תוצאות במחיר הזה. נסו טווח אחר.</div>';
+        }
+        return '<div class="empty">לא מצאנו מוצרים לחיפוש הזה.</div>' + botCta("fallback");
+      }
+      return '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
+        '<div class="grid">' + vis.map(card).join("") + "</div>";
+    }
+    let html = '<div class="sec"><h2>דילים חמים</h2></div>';
+    html += gridOrEmpty((state.hot || []), '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
     const cats = catsWithItems();
     if (cats.length) {
       html += '<div class="sec" style="margin-top:22px"><h2>קטגוריות</h2></div>';
@@ -314,8 +406,8 @@
       '<div class="sub">כל המוצרים מהטיקטוק, לפי סרטון. מהחדש לישן.</div>' +
       '<div class="go">לכל המוצרים מהסרטונים ←</div>' +
     "</a>";
-    html += botCta();
-    html += '<div class="sec"><h2>דילים חמים</h2></div>';
+    html += searchBar("מה אתם מחפשים?");
+    html += botCta("secondary");
     html += priceChips();
     html += '<div id="results">' + resultsHome() + "</div>";
     return html;
@@ -428,6 +520,9 @@
     state.hot = (pair[1] && pair[1].products) || [];
     if (!state.videos.length && !state.hot.length) state.failed = true;
     draw();
+    if (state.page === "home" && (state.query || "").trim().length >= 2) {
+      startAliSearch(state.query);
+    }
   });
   window.addEventListener("popstate", function (e) {
     if (e.state && e.state.page) {
@@ -438,6 +533,9 @@
     } else {
       parseEntry();
       draw();
+    }
+    if (state.page === "home" && (state.query || "").trim().length >= 2) {
+      startAliSearch(state.query);
     }
   });
 })();
