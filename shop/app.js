@@ -76,7 +76,6 @@
   function launchHref(dest) {
     dest = String(dest || "");
     if (!dest) return dest;
-    if (needsBuySheet()) return dest;
     if (isAndroid()) return aliIntent(dest);
     return dest;
   }
@@ -109,98 +108,6 @@
         waits.forEach(function (fn) { try { fn(null); } catch (e) {} });
       });
   }
-  function needsBuySheet() {
-    const n = inAppName();
-    return n === "tiktok" || n === "instagram";
-  }
-  function cleanAffiliateUrl(dest, fallback) {
-    const list = [dest, fallback];
-    for (let i = 0; i < list.length; i++) {
-      const u = String(list[i] || "");
-      if (/^https:\/\/s\.click\.aliexpress\.com\//i.test(u)) return u;
-      if (/^https:\/\/([a-z0-9-]+\.)*aliexpress\.(com|us|ru)\//i.test(u)) return u;
-    }
-    return "";
-  }
-  function copyText(text) {
-    text = String(text || "");
-    if (!text) return Promise.resolve(false);
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () {
-        return fallbackCopy(text);
-      });
-    }
-    return Promise.resolve(fallbackCopy(text));
-  }
-  function fallbackCopy(text) {
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      return !!ok;
-    } catch (e) {
-      return false;
-    }
-  }
-  function hideBuySheet() {
-    const wrap = document.getElementById("buy-sheet");
-    if (wrap) wrap.classList.remove("on");
-    document.body.classList.remove("has-buy-sheet");
-  }
-  function setBuySheetLink(dest, fallback) {
-    const wrap = document.getElementById("buy-sheet");
-    if (!wrap) return;
-    const ready = dest || fallback;
-    const clean = cleanAffiliateUrl(dest, fallback);
-    if (clean) wrap.setAttribute("data-copy", clean);
-    const go = document.getElementById("buy-sheet-go");
-    if (go && ready) {
-      setBuyHref(go, ready);
-      go.textContent = "פתיחה באלי אקספרס";
-    }
-  }
-  function showBuySheet(url, dest) {
-    let wrap = document.getElementById("buy-sheet");
-    if (!wrap) {
-      wrap = document.createElement("div");
-      wrap.id = "buy-sheet";
-      wrap.className = "buy-sheet";
-      wrap.innerHTML =
-        '<div class="buy-sheet-backdrop" data-act="close"></div>' +
-        '<div class="buy-sheet-card" role="dialog" aria-label="רכישה">' +
-        '<a class="buy-sheet-primary" id="buy-sheet-go" rel="noopener">פתיחה באלי אקספרס</a>' +
-        '<button type="button" class="buy-sheet-copy" id="buy-sheet-copy">העתקת קישור</button>' +
-        '<p class="buy-sheet-hint">לחצו על ⋯ ואז ״פתיחה בדפדפן״ כדי לקנות באפליקציה</p>' +
-        "</div>";
-      document.body.appendChild(wrap);
-      wrap.addEventListener("click", function (e) {
-        if (e.target && e.target.getAttribute && e.target.getAttribute("data-act") === "close") hideBuySheet();
-      });
-      const copyBtn = document.getElementById("buy-sheet-copy");
-      copyBtn.addEventListener("click", function () {
-        const link = wrap.getAttribute("data-copy") || "";
-        copyText(link).then(function (ok) {
-          copyBtn.textContent = ok ? "הקישור הועתק" : "לא הצלחנו להעתיק";
-          setTimeout(function () { copyBtn.textContent = "העתקת קישור"; }, 1600);
-        });
-      });
-    }
-    const ready = dest || url;
-    const clean = cleanAffiliateUrl(dest, url);
-    if (clean) wrap.setAttribute("data-copy", clean);
-    else wrap.removeAttribute("data-copy");
-    const go = document.getElementById("buy-sheet-go");
-    if (go && ready) setBuyHref(go, ready);
-    if (go) go.textContent = dest ? "פתיחה באלי אקספרס" : "מכין את הקישור…";
-    wrap.classList.add("on");
-    document.body.classList.add("has-buy-sheet");
-  }
   function showOpenAppPrompt(dest) {
 
     let bar = document.getElementById("open-hint");
@@ -231,7 +138,7 @@
   function launchAli(dest, fallback) {
     const start = dest || fallback;
     if (!start) return;
-    if (isAndroid() && !needsBuySheet()) {
+    if (isAndroid()) {
       window.location.href = aliIntent(start);
       return;
     }
@@ -257,15 +164,6 @@
       const go = function (dest) { try { tg.openLink(dest, { try_instant_view: false }); } catch (e) { launchAli(dest, url); } };
       if (resolveCache[url]) return go(resolveCache[url]);
       prefetchResolve(url, function (dest) { go(dest || url); });
-      return;
-    }
-    if (needsBuySheet()) {
-      if (ev) ev.preventDefault();
-      const dest = resolveCache[url];
-      showBuySheet(url, dest);
-      if (!dest) {
-        prefetchResolve(url, function (d) { setBuySheetLink(d, url); });
-      }
       return;
     }
     const dest = resolveCache[url];
@@ -297,10 +195,6 @@
     hasAffParams: hasAffParams,
     isTrapInApp: isTrapInApp,
     inAppName: inAppName,
-    needsBuySheet: needsBuySheet,
-    cleanAffiliateUrl: cleanAffiliateUrl,
-    showBuySheet: showBuySheet,
-    hideBuySheet: hideBuySheet,
   };
   const API_BASE = "https://84-13-70-240.sslip.io";
   function isShopTest() {
