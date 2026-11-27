@@ -46,6 +46,8 @@
   }
   const API_BASE = "https://84-13-70-240.sslip.io";
   const SUGGESTS = ["מנורת שקיעה", "מעמד לטלפון לרכב", "אוזניות", "בקבוק מים"];
+  const FINDER_EXAMPLES = ["כבל HDMI 1.5 מטר", "מתנה לאמא עד 100", "מה כדאי לקנות לרכב"];
+  const SEARCH_STEPS = ["פיני מחפש…", "מסנן מוכרים גרועים…", "בוחר את הטובים ביותר…"];
   const PLACEHOLDER = "img/placeholder.svg";
   function isAliUrl(s) {
     return /aliexpress\.|s\.click\.aliexpress|a\.aliexpress/i.test(s || "");
@@ -239,6 +241,10 @@
     inp.addEventListener("search", function () {
       submit();
     });
+    inp.addEventListener("focus", function () { stopPlaceholder(); });
+    inp.addEventListener("blur", function () {
+      if (!(inp.value || "").trim()) startPlaceholder();
+    });
   }
 
   var aliAbort = null;
@@ -269,10 +275,9 @@
       step += 1;
       const box = document.getElementById("results");
       if (!box || state.aliStatus !== "loading") { clearInterval(progressTimer); return; }
-      const msgs = ["פיני מחפש…", "עוד רגע, פיני בודק מחירים בשקלים…", "מסנן מוצרים איכותיים…"];
-      const empty = box.querySelector(".empty.loading");
-      if (empty) empty.textContent = msgs[Math.min(step, msgs.length - 1)];
-    }, 3500);
+      const el = box.querySelector("#search-step");
+      if (el) el.textContent = SEARCH_STEPS[step % SEARCH_STEPS.length];
+    }, 2200);
   }
 
   function startAliSearch(q) {
@@ -481,6 +486,79 @@
         ICONS[c.svg] + "</div><label>" + esc(c.name) + "</label></button>";
     }).join("") + "</div>";
   }
+  function skelCard() {
+    return '<div class="skel-card" aria-hidden="true"><div class="skel-pic"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-btn"></div></div>';
+  }
+
+  function searchingHTML() {
+    return '<div class="searching" role="status" aria-live="polite" aria-busy="true">' +
+      '<div class="searching-hero">' +
+        '<div class="searching-face">' +
+          '<img src="img/pini.jpg" alt="">' +
+          '<span class="searching-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        "</div>" +
+        '<p class="searching-lead">פיני סורק את כל אלי אקספרס בשבילך, זה לוקח כמה שניות…</p>' +
+        '<p class="searching-step" id="search-step">' + SEARCH_STEPS[0] + "</p>" +
+      "</div>" +
+      '<div class="skel-grid">' + skelCard() + skelCard() + skelCard() + skelCard() + "</div>" +
+    "</div>";
+  }
+
+  function finderBlock() {
+    const chips = FINDER_EXAMPLES.map(function (s) {
+      return '<button type="button" class="chip finder-chip" data-q="' + esc(s) + '">' + esc(s) + "</button>";
+    }).join("");
+    return '<section class="finder" aria-label="הבוט של פיני">' +
+      '<h2 class="finder-title">🦝 פיני ימצא לך כל מוצר באלי אקספרס</h2>' +
+      '<p class="finder-sub">רק כתבו מה אתם צריכים, והוא יביא את הכי טובים במחיר הכי שווה</p>' +
+      searchBar(FINDER_EXAMPLES[0], { photo: true, help: false }) +
+      '<div class="finder-chips">' + chips + "</div>" +
+      '<p class="search-help">אפשר גם להדביק קישור מאלי, או לצלם מוצר.</p>' +
+    "</section>";
+  }
+
+  var placeTimer = null;
+  var placeIdx = 0;
+  var placeChar = 0;
+  var placeDeleting = false;
+
+  function stopPlaceholder() {
+    if (placeTimer) { clearTimeout(placeTimer); placeTimer = null; }
+  }
+
+  function startPlaceholder() {
+    stopPlaceholder();
+    const inp = document.getElementById("q");
+    if (!inp || state.page !== "home") return;
+    if ((inp.value || "").length || document.activeElement === inp) return;
+    function tick() {
+      const field = document.getElementById("q");
+      if (!field || (field.value || "").length || document.activeElement === field) return;
+      const word = FINDER_EXAMPLES[placeIdx % FINDER_EXAMPLES.length];
+      if (!placeDeleting) {
+        placeChar += 1;
+        field.placeholder = word.slice(0, placeChar);
+        if (placeChar >= word.length) {
+          placeDeleting = true;
+          placeTimer = setTimeout(tick, 1800);
+          return;
+        }
+        placeTimer = setTimeout(tick, 70);
+      } else {
+        placeChar -= 1;
+        field.placeholder = word.slice(0, Math.max(0, placeChar));
+        if (placeChar <= 0) {
+          placeDeleting = false;
+          placeIdx = (placeIdx + 1) % FINDER_EXAMPLES.length;
+          placeTimer = setTimeout(tick, 320);
+          return;
+        }
+        placeTimer = setTimeout(tick, 40);
+      }
+    }
+    placeTimer = setTimeout(tick, 500);
+  }
+
   function searchBar(placeholder, opts) {
     opts = opts || {};
     let html = '<div class="search">' + ICONS.search +
@@ -545,7 +623,7 @@
     const searching = q.length >= 2 || state.aliKind === "photo" || state.aliKind === "similar" || state.aliStatus === "loading";
     if (searching) {
       if (state.aliStatus === "loading") {
-        return '<div class="empty loading">פיני מחפש…</div>';
+        return searchingHTML();
       }
       if (state.aliStatus === "error") {
         return '<div class="empty">' + esc(state.aliReply || "החיפוש באתר לא הצליח כרגע. נסו שוב בעוד רגע.") + "</div>" + suggestions();
@@ -628,7 +706,7 @@
       '<div class="sub">כל המוצרים מהטיקטוק, לפי סרטון. מהחדש לישן.</div>' +
       '<div class="go">לכל המוצרים מהסרטונים ←</div>' +
     "</a>";
-    html += searchBar("מה אתם מחפשים?", { photo: true, help: true });
+    html += finderBlock();
     html += priceChips();
     html += '<div id="results">' + resultsHome() + "</div>";
     html += groupsFooter();
@@ -678,6 +756,7 @@
     root.innerHTML = html;
     bind(root);
     window.scrollTo(0, 0);
+    if (state.page === "home" && !(state.query || "").trim()) startPlaceholder();
   }
 
   function urlFor(page, opts) {
