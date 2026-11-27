@@ -4,7 +4,7 @@
   TikTok's bio webview blocks every escape (intents, deep links, t.me), so
   the in-TikTok view only guides the user: ⋯ → «פתח בדפדפן» → הצטרפו.
   Arrows point to BOTH top corners (⋯ is top-right on some phones, top-left on others).
-  Real browser, or ?from=tt: Telegram + WhatsApp join buttons. No auto-redirect.
+  Real browser, or ?from=tt: one big Telegram join button; WhatsApp as a small text link. No auto-redirect.
 -->
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -119,14 +119,24 @@
     /* ---------- Real-browser view ---------- */
     .btn {
       display: flex; align-items: center; justify-content: center; gap: 12px;
-      width: 100%; min-height: 66px; border-radius: 20px; margin-bottom: 14px;
-      color: #fff; text-decoration: none; font-size: 1.3rem; font-weight: 900;
+      width: 100%; min-height: 70px; border-radius: 20px; margin-bottom: 18px;
+      color: #fff; text-decoration: none; font-size: 1.35rem; font-weight: 900;
       box-shadow: 0 10px 26px rgba(0,0,0,.3);
       transition: transform .12s ease;
     }
     .btn:active { transform: scale(.97); }
     .btn-tg { background: linear-gradient(135deg, #2aabee, #1d8ccc); }
-    .btn-wa { background: linear-gradient(135deg, #2fe07a, #1ebe5d); }
+    .wa-link {
+      display: inline-block;
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,.35);
+      padding-bottom: 1px;
+      margin: 0 0 10px;
+    }
+    .wa-link:active { color: #fff; border-bottom-color: #fff; }
     .foot { color: var(--muted); font-size: .9rem; margin-top: 8px; }
   </style>
 </head>
@@ -171,10 +181,7 @@
         <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.5 3.3 18.4 21c-.2 1.1-.8 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.2.3-.5.5-.9.5l.3-4.8 8.8-8c.4-.3 0-.5-.6-.2l-10.9 6.9-4.7-1.5c-1-.3-1-.9.2-1.4L20 2.6c.8-.3 1.5.2 1.5.7z"/></svg>
         הצטרפו בטלגרם
       </a>
-      <a id="open-wa" class="btn btn-wa" href="https://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM" rel="noopener">
-        <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2C6.5 2 2.03 6.45 2.03 12c0 1.76.46 3.48 1.34 5L2 22l5.16-1.34A10 10 0 0 0 12.04 22C17.57 22 22 17.54 22 12S17.57 2 12.04 2zm5.85 14.27c-.24.68-1.4 1.3-1.94 1.35-.5.04-1.12.07-1.81-.11-.42-.12-.95-.3-1.64-.6-2.89-1.25-4.77-4.16-4.92-4.35-.14-.2-1.18-1.57-1.18-3 0-1.42.73-2.12 1-2.4.24-.27.64-.39 1.02-.39h.73c.23 0 .55-.1.86.66.32.77 1.08 2.65 1.17 2.84.1.2.16.42.03.68-.13.27-.2.43-.4.66-.2.23-.41.51-.59.69-.18.18-.37.37-.16.72.2.34.9 1.48 1.93 2.4 1.33 1.18 2.45 1.55 2.8 1.72.35.18.55.15.75-.09.2-.23.87-1.01 1.1-1.36.23-.34.46-.28.77-.16.32.11 2.03.96 2.38 1.13.35.18.58.26.66.41.09.15.09.86-.16 1.54z"/></svg>
-        הצטרפו בוואטסאפ
-      </a>
+      <a id="open-wa" class="wa-link" href="https://chat.whatsapp.com/JEhehJTm0lXJl5LZw6cHCM" rel="noopener">מעדיפים וואטסאפ? לחצו כאן</a>
       <p class="foot">בחינם · בלי ספאם 🦝</p>
     </section>
   </main>
