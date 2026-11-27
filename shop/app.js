@@ -83,6 +83,7 @@
     return Number(p.price) <= state.price;
   }
   function matchesQuery(p, q) {
+    q = String(q || "").trim().toLowerCase();
     if (!q) return true;
     const blob = ((p.title || "") + " " + (p.desc || "")).toLowerCase();
     return blob.indexOf(q) !== -1;
@@ -122,19 +123,72 @@
         else if (go.indexOf("cat:") === 0) { e.preventDefault(); nav("cat", { cat: go.slice(4) }); }
       });
     });
-    const inp = el.querySelector("#q");
-    if (inp) {
-      inp.addEventListener("input", function () {
-        state.query = inp.value.trim();
-        if (state.query) nav("search", { query: state.query, replace: true });
-        else if (state.page === "search") nav("home", { replace: true });
-      });
-    }
+    bindSearch(el.querySelector("#q"));
     el.querySelectorAll("[data-price]").forEach(function (c) {
       c.addEventListener("click", function () {
         state.price = Number(c.getAttribute("data-price")) || 0;
-        draw();
+        syncChips();
+        drawResults();
       });
+    });
+  }
+
+  function bindResults(el) {
+    if (!el) return;
+    el.querySelectorAll("[data-link]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) { openBuy(btn.getAttribute("data-link"), e); });
+    });
+    el.querySelectorAll("[data-go]").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        const go = a.getAttribute("data-go");
+        if (go === "videos") { e.preventDefault(); nav("videos"); }
+        else if (go === "home") { e.preventDefault(); nav("home"); }
+        else if (go.indexOf("cat:") === 0) { e.preventDefault(); nav("cat", { cat: go.slice(4) }); }
+      });
+    });
+  }
+
+  var searchTimer = null;
+
+  function bindSearch(inp) {
+    if (!inp || inp.getAttribute("data-bound") === "1") return;
+    inp.setAttribute("data-bound", "1");
+    inp.addEventListener("input", function () {
+      // Keep the typed value as-is (don't write back or trim the field).
+      state.query = inp.value;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        applyQuery(inp.value, { fromTyping: true });
+      }, 200);
+    });
+    function submit() {
+      clearTimeout(searchTimer);
+      applyQuery(inp.value, { fromTyping: true });
+      inp.blur();
+    }
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submit();
+      }
+    });
+    inp.addEventListener("search", function () {
+      submit();
+    });
+  }
+
+  function applyQuery(value, opts) {
+    opts = opts || {};
+    state.query = (value || "").trim();
+    const url = urlFor(state.page, { cat: state.cat, query: state.query });
+    history.replaceState({ page: state.page, cat: state.cat, query: state.query }, "", url);
+    drawResults();
+  }
+
+  function syncChips() {
+    document.querySelectorAll("[data-price]").forEach(function (c) {
+      const on = Number(state.price) === Number(c.getAttribute("data-price"));
+      c.classList.toggle("on", on);
     });
   }
 
@@ -157,7 +211,7 @@
   function searchBar(placeholder) {
     return '<div class="search">' + ICONS.search +
       '<input id="q" type="search" enterkeyhint="search" placeholder="' + esc(placeholder || "מה אתם מחפשים?") +
-      '" value="' + esc(state.query) + '" autocomplete="off"></div>';
+      '" value="' + esc(state.query) + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>';
   }
   function header(home) {
     if (home) {
@@ -178,6 +232,55 @@
     return '<div class="grid">' + vis.map(card).join("") + "</div>";
   }
 
+  function resultsHome() {
+    const q = (state.query || "").trim();
+    if (q) {
+      const items = uniqueById(allProducts().filter(function (p) { return matchesQuery(p, q); }));
+      return '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
+        gridOrEmpty(items, '<div class="empty">לא מצאנו. נסו מילה אחרת, או היכנסו למוצרים מהסרטונים.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
+    }
+    let html = '<div class="sec"><h2>דילים חמים</h2></div>';
+    html += gridOrEmpty((state.hot || []), '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
+    const cats = catsWithItems();
+    if (cats.length) {
+      html += '<div class="sec" style="margin-top:22px"><h2>קטגוריות</h2></div>';
+      html += catRow(null);
+    }
+    return html;
+  }
+
+  function resultsVideos() {
+    const q = (state.query || "").trim();
+    let html = "";
+    let shown = 0;
+    (state.videos || []).forEach(function (g) {
+      const items = (g.products || []).filter(function (p) { return matchesQuery(p, q) && underPrice(p); });
+      if (!items.length) return;
+      shown += items.length;
+      const when = g.date_label ? g.date_label : "";
+      html += '<section class="group"><div class="ghead"><h2>' + esc(g.headline) + "</h2>" +
+        (when ? '<div class="when">' + esc(when) + "</div>" : "") + "</div>";
+      html += '<div class="grid">' + items.map(card).join("") + "</div></section>";
+    });
+    if (!shown) {
+      html += '<div class="empty">לא מצאנו מוצר כזה.<br><a href="index.html" data-go="home">חזרה לחנות</a></div>';
+    }
+    return html;
+  }
+
+  function resultsCat() {
+    const items = uniqueById(allProducts().filter(function (p) {
+      return p.cat === state.cat && matchesQuery(p, state.query);
+    }));
+    return gridOrEmpty(items, '<div class="empty">אין עדיין מוצרים בקטגוריה הזו.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
+  }
+
+  function resultsHTML() {
+    if (state.page === "videos") return resultsVideos();
+    if (state.page === "cat") return resultsCat();
+    return resultsHome();
+  }
+
   function viewHome() {
     const latest = state.videos[0];
     const thumbs = ((latest && latest.products) || []).slice(0, 5).map(function (p) {
@@ -192,15 +295,8 @@
       '<div class="go">לכל המוצרים מהסרטונים ←</div>' +
     "</a>";
     html += searchBar();
-    html += '<div class="sec"><h2>דילים חמים</h2></div>';
     html += priceChips();
-    const hot = (state.hot || []).filter(function (p) { return matchesQuery(p, state.query); });
-    html += gridOrEmpty(hot, '<div class="empty">אין דילים חמים להצגה כרגע.</div>');
-    const cats = catsWithItems();
-    if (cats.length) {
-      html += '<div class="sec" style="margin-top:22px"><h2>קטגוריות</h2></div>';
-      html += catRow(null);
-    }
+    html += '<div id="results">' + resultsHome() + "</div>";
     return html;
   }
 
@@ -208,21 +304,7 @@
     let html = backHead("המוצרים מהסרטונים", "כל המוצרים מהסרטונים, מהחדש לישן", "index.html");
     html += searchBar("חיפוש במוצרים מהסרטונים…");
     html += priceChips();
-    const q = state.query;
-    let shown = 0;
-    (state.videos || []).forEach(function (g) {
-      const items = (g.products || []).filter(function (p) { return matchesQuery(p, q) && underPrice(p); });
-      if (!items.length) return;
-      shown += items.length;
-      const when = g.date_label ? g.date_label : "";
-      html += '<section class="group"><div class="ghead"><h2>' + esc(g.headline) + "</h2>" +
-        (when ? '<div class="when">' + esc(when) + "</div>" : "") + "</div>";
-      html += '<div class="grid">' + items.map(card).join("") + "</div></section>";
-    });
-    if (!shown) {
-      html += '<div class="empty">לא מצאנו מוצר כזה.' +
-        (q ? "" : "") + '<br><a href="index.html" data-go="home">חזרה לחנות</a></div>';
-    }
+    html += '<div id="results">' + resultsVideos() + "</div>";
     return html;
   }
 
@@ -233,20 +315,18 @@
     html += searchBar("חיפוש ב" + name + "…");
     html += catRow(state.cat);
     html += priceChips();
-    const items = uniqueById(allProducts().filter(function (p) {
-      return p.cat === state.cat && matchesQuery(p, state.query);
-    }));
-    html += gridOrEmpty(items, '<div class="empty">אין עדיין מוצרים בקטגוריה הזו.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
+    html += '<div id="results">' + resultsCat() + "</div>";
     return html;
   }
 
-  function viewSearch() {
-    let html = backHead("חיפוש", state.query ? "תוצאות ל«" + state.query + "»" : "כתבו מה אתם מחפשים", "index.html");
-    html += searchBar();
-    html += priceChips();
-    const items = uniqueById(allProducts().filter(function (p) { return matchesQuery(p, state.query); }));
-    html += gridOrEmpty(items, '<div class="empty">לא מצאנו. נסו מילה אחרת, או היכנסו למוצרים מהסרטונים.<br><a href="videos.html" data-go="videos">למוצרים מהסרטונים</a></div>');
-    return html;
+  function drawResults() {
+    const box = document.getElementById("results");
+    if (!box) {
+      draw();
+      return;
+    }
+    box.innerHTML = resultsHTML();
+    bindResults(box);
   }
 
   function draw() {
@@ -258,7 +338,6 @@
     let html = "";
     if (state.page === "videos") html = viewVideos();
     else if (state.page === "cat") html = viewCat();
-    else if (state.page === "search") html = viewSearch();
     else html = viewHome();
     root.innerHTML = html;
     bind(root);
@@ -267,20 +346,20 @@
 
   function urlFor(page, opts) {
     opts = opts || {};
-    if (page === "videos") return "videos.html";
-    if (page === "cat" && opts.cat) return "index.html?c=" + encodeURIComponent(opts.cat);
-    if (page === "search" && opts.query) return "index.html?q=" + encodeURIComponent(opts.query);
-    return "index.html";
+    const path = page === "videos" ? "videos.html" : "index.html";
+    const params = [];
+    if (page === "cat" && opts.cat) params.push("c=" + encodeURIComponent(opts.cat));
+    if (opts.query) params.push("q=" + encodeURIComponent(opts.query));
+    return params.length ? path + "?" + params.join("&") : path;
   }
   function nav(page, opts) {
     opts = opts || {};
     state.page = page;
-    if (page !== "search") state.query = page === "cat" ? state.query : (opts.query || "");
     if (opts.query != null) state.query = opts.query;
     if (page === "cat") state.cat = opts.cat;
-    else state.cat = null;
-    if (page === "home") { state.query = opts.query || ""; state.price = state.price; }
-    const url = urlFor(page, { cat: state.cat, query: state.query });
+    else if (page !== "cat") state.cat = null;
+    if (page === "home") state.query = opts.query || "";
+    const url = urlFor(state.page, { cat: state.cat, query: state.query });
     if (opts.replace) history.replaceState({ page: page, cat: state.cat, query: state.query }, "", url);
     else history.pushState({ page: page, cat: state.cat, query: state.query }, "", url);
     draw();
@@ -290,6 +369,7 @@
     const q = new URLSearchParams(location.search);
     const path = (location.pathname || "").toLowerCase();
     const hash = (location.hash || "").replace(/^#/, "").toLowerCase();
+    if (q.get("q")) state.query = q.get("q");
     if (q.get("v") === "videos" || q.get("section") === "videos" || hash === "videos" ||
         /videos\.html$/.test(path) || /\/videos\/?$/.test(path)) {
       state.page = "videos";
@@ -297,7 +377,6 @@
     }
     if (q.get("c")) { state.page = "cat"; state.cat = q.get("c"); return; }
     if (hash.indexOf("cat=") === 0) { state.page = "cat"; state.cat = hash.slice(4); return; }
-    if (q.get("q")) { state.page = "search"; state.query = q.get("q"); return; }
     state.page = "home";
   }
 
