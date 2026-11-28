@@ -25,7 +25,7 @@
   };
 
   const root = document.getElementById("app");
-  const state = { videos: [], hot: [], query: "", price: 0, page: "home", cat: null, failed: false, sort: "", aliStatus: "idle", aliProducts: [], aliReply: "", aliKind: "", lastSearchQuery: "" };
+  const state = { videos: [], hot: [], query: "", price: 0, page: "home", cat: null, failed: false, sort: "", aliStatus: "idle", aliProducts: [], aliReply: "", aliKind: "", lastSearchQuery: "", aliNoMatch: null };
 
   function ils(n) {
     if (n == null || n === "") return "";
@@ -597,6 +597,7 @@
         });
         state.aliProducts = list;
         state.aliReply = data.reply || "";
+        state.aliNoMatch = (data.no_match && !list.length) ? { q: q, tip: data.tip || "" } : null;
         state.aliKind = data.kind || "search";
         if (data.kind !== "offtopic" && (data.understood || data.q || q)) {
           state.lastSearchQuery = data.understood || data.q || q;
@@ -885,6 +886,12 @@
       }
       if (state.aliStatus === "rate") {
         return '<div class="empty">החיפוש באתר לא הצליח כרגע. נסו שוב בעוד רגע.</div>' + suggestions();
+      }
+      if (state.aliNoMatch && state.aliStatus === "empty") {
+        return '<div class="nomatch"><div class="nomatch-ico">🔎</div>' +
+          '<h2>לא מצאתי מוצר שמתאים בדיוק ל:</h2><div class="nomatch-q">' + esc(state.aliNoMatch.q) + "</div>" +
+          (state.aliNoMatch.tip ? '<p class="nomatch-tip">' + esc(state.aliNoMatch.tip) + "</p>" : "") +
+          '<p class="nomatch-sub">לא אציג מוצרים שלא מתאימים למה שביקשת.</p></div>' + suggestions();
       }
       const reply = state.aliReply ? '<div class="reply">' + esc(state.aliReply) + "</div>" : "";
       const vis = (state.aliProducts || []).filter(function (p) {
