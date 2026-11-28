@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#A11610">
+  <meta name="theme-color" content="#0B0D18">
   <meta name="robots" content="noindex">
   <title>החנות של פיני</title>
-  <!-- v=20 -->
+  <!-- v=21 -->
   <style>
     @font-face {
       font-family: Assistant;
@@ -14,84 +14,59 @@
       font-weight: 200 800;
       font-display: swap;
     }
-    :root {
-      --cream: #FFF6EA;
-      --ink: #2A2118;
-      --muted: #F3D2B8;
-      --terra: #C45C26;
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       min-height: 100dvh;
-      background: #A11610;
-      color: var(--cream);
+      background: #0B0D18;
       font-family: Assistant, "Segoe UI", Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
+      overflow: hidden;
     }
     body {
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 28px 22px calc(28px + env(safe-area-inset-bottom));
-      background:
-        radial-gradient(ellipse 90% 55% at 50% 46%, rgba(255, 176, 48, .32) 0%, rgba(255, 176, 48, 0) 62%),
-        radial-gradient(ellipse 120% 70% at 50% 100%, rgba(70, 6, 4, .55) 0%, transparent 62%),
-        linear-gradient(165deg, #E03A22 0%, #C02516 38%, #8B120E 100%);
     }
-    body::before {
-      content: "";
+    .scene {
+      display: none;
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
-      background-image: radial-gradient(rgba(255, 236, 210, .11) 1.1px, transparent 1.2px);
-      background-size: 22px 22px;
+      overflow: hidden;
     }
+    body[data-mode="inapp"] .scene { display: block; }
     .corners { display: none; }
     body[data-mode="inapp"] .corners { display: block; }
     .corner {
       position: fixed;
-      top: max(4px, env(safe-area-inset-top));
+      top: max(6px, env(safe-area-inset-top));
       z-index: 20;
       pointer-events: none;
-      width: 152px;
+      width: 156px;
     }
     .corner.right { right: 8px; left: auto; }
     .corner.left { left: 8px; right: auto; }
     .arrow-wrap {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 2px;
-      filter: drop-shadow(0 2px 6px rgba(80, 0, 0, .35));
+      width: 62px;
+      height: 62px;
+      margin-bottom: 4px;
     }
-    .corner.right .arrow-wrap { margin-left: auto; animation: nudgeR 1.6s ease-in-out infinite; }
-    .corner.left .arrow-wrap { margin-right: auto; animation: nudgeL 1.6s ease-in-out infinite; }
+    .corner.right .arrow-wrap { margin-left: auto; }
+    .corner.left .arrow-wrap { margin-right: auto; }
     .corner.left svg { transform: scaleX(-1); }
-    .arrow-wrap svg { width: 64px; height: 64px; display: block; }
-    @keyframes nudgeR {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(4px, -5px); }
-    }
-    @keyframes nudgeL {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(-4px, -5px); }
-    }
+    .arrow-wrap svg { width: 62px; height: 62px; display: block; }
     .hint {
       width: max-content;
-      max-width: 152px;
-      background: rgba(42, 10, 6, .58);
-      border: 1px solid rgba(255, 232, 204, .22);
-      border-radius: 12px;
-      padding: 7px 8px;
+      max-width: 156px;
+      border-radius: 14px;
+      padding: 8px 10px;
       font-size: 12px;
       font-weight: 700;
       line-height: 1.4;
-      color: var(--cream);
       direction: rtl;
       text-align: right;
-      box-shadow: 0 6px 16px rgba(40, 0, 0, .22);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
     }
     .corner.right .hint { margin-left: auto; }
     .corner.left .hint { margin-right: auto; }
@@ -99,42 +74,145 @@
     .hint .en {
       font-size: 11px;
       font-weight: 700;
-      color: var(--muted);
       direction: ltr;
       text-align: right;
     }
     main {
       position: relative;
-      z-index: 1;
+      z-index: 2;
       width: 100%;
       max-width: 360px;
       text-align: center;
     }
+    .hero { display: flex; flex-direction: column; align-items: center; }
     .logo {
-      width: 68px;
-      height: 68px;
-      margin: 0 auto 16px;
+      width: 104px;
+      height: 104px;
       border-radius: 50%;
       object-fit: cover;
-      box-shadow: 0 0 0 3px #FFF6EA, 0 0 0 7px rgba(255, 186, 70, .45), 0 10px 28px rgba(80, 0, 0, .35);
+      margin-bottom: 18px;
     }
-    h1 {
-      font-size: 26px;
+    .bubble {
+      position: relative;
+      width: min(100%, 310px);
+      padding: 18px 20px 16px;
+      border-radius: 24px;
+    }
+    .bubble h1 {
+      font-size: 23px;
       font-weight: 800;
-      line-height: 1.3;
+      line-height: 1.35;
       letter-spacing: -0.02em;
-      color: var(--cream);
-      text-shadow: 0 2px 10px rgba(70, 0, 0, .35);
+    }
+    .tail {
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translateX(-50%) rotate(45deg);
+      border-radius: 3px;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: .88; }
+    }
+    @keyframes pulseL {
+      0%, 100% { transform: scaleX(-1) scale(1); opacity: 1; }
+      50% { transform: scaleX(-1) scale(1.08); opacity: .88; }
+    }
+    .bubble { animation: float 3.6s ease-in-out infinite; }
+
+    body {
+      background:
+        radial-gradient(ellipse 70% 45% at 50% 42%, rgba(255, 196, 80, .22) 0%, transparent 58%),
+        radial-gradient(ellipse 80% 50% at 80% 0%, rgba(120, 80, 30, .18) 0%, transparent 50%),
+        radial-gradient(ellipse 90% 60% at 50% 100%, #07060c 0%, transparent 55%),
+        linear-gradient(180deg, #14182a 0%, #0b0d18 55%, #08060f 100%);
+      color: #F8EEDC;
+    }
+    .bokeh {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(18px);
+      opacity: .55;
+    }
+    .b1 { width: 180px; height: 180px; background: #d4a03a; top: 18%; left: -40px; opacity: .28; filter: blur(40px); }
+    .b2 { width: 90px; height: 90px; background: #ffd27a; top: 28%; right: 18px; opacity: .35; }
+    .b3 { width: 130px; height: 130px; background: #c48a2a; bottom: 12%; left: 20%; opacity: .22; filter: blur(36px); }
+    .b4 { width: 46px; height: 46px; background: #fff4d0; top: 16%; left: 28%; opacity: .4; filter: blur(8px); }
+    .b5 { width: 28px; height: 28px; background: #ffe9a8; top: 58%; right: 22%; opacity: .5; filter: blur(5px); }
+    .b6 { width: 22px; height: 22px; background: #fff; top: 72%; left: 18%; opacity: .25; filter: blur(4px); }
+    .b7 { width: 70px; height: 70px; background: #8a5a18; top: 8%; right: 30%; opacity: .3; filter: blur(24px); }
+    .motif { position: absolute; opacity: .16; color: #f3d398; }
+    .motif.tag1 { top: 22%; left: 12%; transform: rotate(-18deg); }
+    .motif.tag2 { bottom: 18%; right: 10%; transform: rotate(16deg); }
+    .spark { position: absolute; width: 10px; height: 10px; opacity: .55; }
+    .s1 { top: 26%; right: 18%; }
+    .s2 { top: 62%; left: 14%; }
+    .s3 { bottom: 22%; left: 42%; }
+    .corner.right .arrow-wrap { animation: pulse 1.8s ease-in-out infinite; color: #F6E2B0; filter: drop-shadow(0 0 8px rgba(246, 210, 120, .45)); }
+    .corner.left .arrow-wrap { animation: pulse 1.8s ease-in-out infinite; color: #F6E2B0; filter: drop-shadow(0 0 8px rgba(246, 210, 120, .45)); }
+    .corner.left svg { transform: none; }
+    .corner.left .arrow-wrap { animation-name: pulseL; }
+    .hint {
+      background: rgba(10, 12, 22, .72);
+      border: 1px solid rgba(246, 226, 176, .28);
+      color: #F8EEDC;
+      box-shadow: 0 8px 22px rgba(0,0,0,.35);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .hint .en { color: #D4B26A; }
+    .logo {
+      box-shadow:
+        0 0 0 3px #F6E2B0,
+        0 0 0 8px rgba(246, 210, 120, .22),
+        0 0 40px 8px rgba(232, 176, 64, .45);
+    }
+    .bubble {
+      background: linear-gradient(180deg, rgba(255, 248, 232, .14), rgba(20, 18, 30, .45));
+      border: 1px solid rgba(246, 226, 176, .32);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.16);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      color: #FFF8EC;
+    }
+    .tail {
+      background: rgba(40, 36, 50, .7);
+      border-top: 1px solid rgba(246, 226, 176, .32);
+      border-left: 1px solid rgba(246, 226, 176, .32);
+      box-shadow: -4px -4px 12px rgba(0,0,0,.12);
     }
   </style>
 </head>
 <body>
+  <div class="scene" aria-hidden="true">
+    <span class="bokeh b1"></span><span class="bokeh b2"></span><span class="bokeh b3"></span>
+    <span class="bokeh b4"></span><span class="bokeh b5"></span><span class="bokeh b6"></span><span class="bokeh b7"></span>
+    <svg class="motif tag1" width="42" height="54" viewBox="0 0 42 54" fill="none">
+      <path d="M26 3L39 16V50H3V16L16 3H26Z" stroke="currentColor" stroke-width="2.2" fill="currentColor" fill-opacity=".15"/>
+      <circle cx="21" cy="16" r="3.2" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <svg class="motif tag2" width="42" height="54" viewBox="0 0 42 54" fill="none">
+      <path d="M26 3L39 16V50H3V16L16 3H26Z" stroke="currentColor" stroke-width="2.2" fill="currentColor" fill-opacity=".15"/>
+      <circle cx="21" cy="16" r="3.2" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <svg class="spark s1" viewBox="0 0 16 16" fill="#F6E2B0"><path d="M8 0l1.2 5.2L16 8l-6.8 2.8L8 16l-1.2-5.2L0 8l6.8-2.8z"/></svg>
+    <svg class="spark s2" viewBox="0 0 16 16" fill="#F6E2B0"><path d="M8 0l1.2 5.2L16 8l-6.8 2.8L8 16l-1.2-5.2L0 8l6.8-2.8z"/></svg>
+    <svg class="spark s3" viewBox="0 0 16 16" fill="#F6E2B0"><path d="M8 0l1.2 5.2L16 8l-6.8 2.8L8 16l-1.2-5.2L0 8l6.8-2.8z"/></svg>
+  </div>
+
   <div class="corners" id="tt-guide" hidden>
     <div class="corner left">
       <div class="arrow-wrap">
         <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
-          <path d="M22 80C22 44 44 20 80 16" stroke="#FFF6EA" stroke-width="8" stroke-linecap="round"/>
-          <path d="M58 12L84 12L84 38" stroke="#FFF6EA" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 80C22 44 44 20 80 16" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+          <path d="M58 12L84 12L84 38" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <p class="hint">
@@ -146,8 +224,8 @@
     <div class="corner right">
       <div class="arrow-wrap">
         <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
-          <path d="M22 80C22 44 44 20 80 16" stroke="#FFF6EA" stroke-width="8" stroke-linecap="round"/>
-          <path d="M58 12L84 12L84 38" stroke="#FFF6EA" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 80C22 44 44 20 80 16" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+          <path d="M58 12L84 12L84 38" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <p class="hint">
@@ -158,8 +236,13 @@
     </div>
   </div>
   <main id="guide" hidden>
-    <img class="logo" src="../shop/img/pini.jpg" alt="פיני" width="68" height="68">
-    <h1>פתחו בדפדפן כדי להיכנס לאתר</h1>
+    <div class="hero">
+      <img class="logo" src="../shop/img/pini.jpg" alt="פיני" width="104" height="104">
+      <div class="bubble">
+        <span class="tail" aria-hidden="true"></span>
+        <h1>פתחו בדפדפן כדי להיכנס לאתר</h1>
+      </div>
+    </div>
   </main>
   <script>
   (function () {
