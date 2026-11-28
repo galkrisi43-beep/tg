@@ -578,9 +578,10 @@
         if (seq !== aliSeq) return;
         const data = pack.data || {};
         if (data.ok === false && pack.status === 429) {
-          state.aliStatus = "rate";
+          // Rate limits should almost never fire for normal use. Show a retry, not a "too many" wall.
+          state.aliStatus = "error";
           state.aliProducts = [];
-          state.aliReply = "";
+          state.aliReply = "החיפוש באתר לא הצליח כרגע. נסו שוב בעוד רגע.";
           drawResults();
           return;
         }
@@ -883,7 +884,7 @@
         return '<div class="empty">' + esc(state.aliReply || "החיפוש באתר לא הצליח כרגע. נסו שוב בעוד רגע.") + "</div>" + suggestions();
       }
       if (state.aliStatus === "rate") {
-        return '<div class="empty">יותר מדי חיפושים ברגע זה. נסו שוב בעוד רגע.</div>' + suggestions();
+        return '<div class="empty">החיפוש באתר לא הצליח כרגע. נסו שוב בעוד רגע.</div>' + suggestions();
       }
       const reply = state.aliReply ? '<div class="reply">' + esc(state.aliReply) + "</div>" : "";
       const vis = (state.aliProducts || []).filter(function (p) {
@@ -893,9 +894,12 @@
         return reply + suggestions();
       }
       if (!vis.length) {
-        if (state.price) {
-          return '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
-            '<div class="empty">אין תוצאות במחיר הזה. נסו טווח אחר.</div>';
+        const all = (state.aliProducts || []).filter(function (p) { return isAffiliate(p.link); });
+        if (state.price && all.length) {
+          return reply +
+            '<div class="sec"><h2>תוצאות חיפוש</h2></div>' +
+            '<div class="reply">אין מוצרים בטווח המחיר שבחרת, אז הנה התוצאות בלי סינון המחיר.</div>' +
+            '<div class="grid">' + all.map(function (p) { return card(p, { similar: true }); }).join("") + "</div>";
         }
         return reply + '<div class="empty">לא מצאנו מוצרים לחיפוש הזה. נסו מילה אחרת, או בחרו אחת מההצעות.</div>' + suggestions();
       }
