@@ -476,7 +476,7 @@
       clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
         applyQuery(inp.value, { fromTyping: true });
-      }, state.page === "home" ? 500 : 200);
+      }, state.page === "home" ? 1200 : 200);
     });
     function submit() {
       clearTimeout(searchTimer);
